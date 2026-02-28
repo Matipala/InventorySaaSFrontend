@@ -1,0 +1,2 @@
+# InventorySaaSFrontend
+inventory management frontend 
