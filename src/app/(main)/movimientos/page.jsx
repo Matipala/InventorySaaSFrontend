@@ -17,8 +17,6 @@ const TIPOS = [
   { value: "ENTRADA", label: "Entrada" },
   { value: "SALIDA", label: "Salida" },
   { value: "TRANSFERENCIA", label: "Transferencia" },
-  { value: "AJUSTE_POSITIVO", label: "Ajuste positivo" },
-  { value: "AJUSTE_NEGATIVO", label: "Ajuste negativo" },
 ];
 
 const FORM_DEFAULT = {
@@ -164,7 +162,7 @@ function EntradaForm({ onClose }) {
           >
             <option value="">Seleccionar producto…</option>
             {productosActivos.map((p, i) => (
-              <option key={p.id_producto ?? i} value={p.id_producto}>
+              <option key={p.idProducto ?? i} value={p.idProducto}>
                 {p.nombre} — {p.sku}
               </option>
             ))}
@@ -185,7 +183,7 @@ function EntradaForm({ onClose }) {
           >
             <option value="">Seleccionar almacén…</option>
             {almacenes.map((a, i) => (
-              <option key={a.id_almacen ?? i} value={a.id_almacen}>
+              <option key={a.idAlmacen ?? i} value={a.idAlmacen}>
                 {a.nombre}
               </option>
             ))}
@@ -206,9 +204,9 @@ function EntradaForm({ onClose }) {
             >
               <option value="">Seleccionar almacén destino…</option>
               {almacenes
-                .filter((a) => String(a.id_almacen) !== form.idAlmacen)
+                .filter((a) => String(a.idAlmacen) !== form.idAlmacen)
                 .map((a, i) => (
-                  <option key={a.id_almacen ?? i} value={a.id_almacen}>
+                  <option key={a.idAlmacen ?? i} value={a.idAlmacen}>
                     {a.nombre}
                   </option>
                 ))}
@@ -295,7 +293,7 @@ function MovimientosTable({ movimientos, isLoading }) {
           </thead>
           <tbody className="divide-y divide-gray-50">
             {movimientos.map((m, i) => (
-              <tr key={m.id_movimiento ?? i} className="hover:bg-violet-100 transition-colors">
+              <tr key={m.idMovimiento ?? i} className="hover:bg-violet-100 transition-colors">
                 <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{formatDateTime(m.fecha)}</td>
                 <td className="px-5 py-3"><Badge tipo={m.tipo} /></td>
                 <td className="px-5 py-3 text-gray-800 font-medium">{m.nombreProducto ?? m.id_producto}</td>
@@ -318,12 +316,12 @@ export default function MovimientosPage() {
   const { data: almacenes = [] } = useAlmacenes();
 
   const movimientosConNombres = (movimientos || []).map((m) => {
-    const producto = productos.find((p) => p.id_producto === m.id_producto);
-    const almacen = almacenes.find((a) => a.id_almacen === m.id_almacen);
+    const producto = productos.find((p) => p.idProducto === m.idProducto);
+    const almacen = almacenes.find((a) => a.idAlmacen === m.idAlmacen);
     return {
       ...m,
-      nombreProducto: m.nombreProducto || producto?.nombre || m.id_producto,
-      nombreAlmacen: m.nombreAlmacen || almacen?.nombre || m.id_almacen,
+      nombreProducto: m.productoNombre || producto?.nombre || m.idProducto,
+      nombreAlmacen: m.almacenNombre || almacen?.nombre || m.idAlmacen,
     };
   });
 

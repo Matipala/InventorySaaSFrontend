@@ -27,6 +27,7 @@ api.interceptors.response.use(
     (error) => {
         const message =
             error.response?.data?.message ||
+            error.response?.data?.mensaje ||
             error.response?.data?.title ||
             error.message ||
             "Error desconocido";
