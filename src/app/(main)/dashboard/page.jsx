@@ -1,17 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   PackageX,
-  Clock,
   Package,
+  ShoppingCart,
+  ChefHat,
+  Users,
+  Receipt,
   Warehouse,
-  Tag,
-  ArrowLeftRight,
+  ChevronRight,
 } from "lucide-react";
 import api from "@/lib/api";
 import { useEmpresa } from "@/context/EmpresaContext";
+import { useProductos } from "@/hooks/useProductos";
 
 function StatCard({ icon: Icon, label, value, color = "blue" }) {
   const colors = {
@@ -57,8 +61,41 @@ function AlertList({ title, icon: Icon, items, renderItem, emptyMsg }) {
   );
 }
 
+function ModuleCard({ title, subtitle, icon: Icon, links }) {
+  return (
+    <section className="bg-(--background) rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-(--background)/60 border border-gray-200 dark:border-gray-700">
+          <Icon size={18} />
+        </div>
+        <div>
+          <h2 className="text-base font-semibold text-(--foreground)">{title}</h2>
+          <p className="text-xs text-(--foreground)/70">{subtitle}</p>
+        </div>
+      </div>
+
+      <div className="p-3 space-y-2">
+        {links.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="group flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3 hover:bg-[#ece3f8] dark:hover:bg-[#2b173e] transition-colors"
+          >
+            <div>
+              <p className="text-sm font-semibold text-(--foreground)">{item.label}</p>
+              <p className="text-xs text-(--foreground)/70 mt-0.5">{item.description}</p>
+            </div>
+            <ChevronRight size={16} className="text-(--foreground)/60 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function DashboardPage() {
   const { empresaId } = useEmpresa();
+  const { data: productos } = useProductos();
 
   const { data: stockBajo } = useQuery({
     queryKey: ["alertas-stock-bajo", empresaId],
@@ -71,9 +108,6 @@ export default function DashboardPage() {
     queryFn: () => api.get("/api/Stock/alertas/agotado").then((r) => r.data),
     enabled: !!empresaId,
   });
-
-  // Obtener todos los productos para el total
-  const { data: productos } = require("@/hooks/useProductos").useProductos();
 
   if (!empresaId) {
     return (

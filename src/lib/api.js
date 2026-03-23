@@ -25,10 +25,24 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        const data = error.response?.data;
+
+        // ASP.NET often returns plain text for BadRequest("mensaje")
+        if (typeof data === "string" && data.trim().length > 0) {
+            return Promise.reject(new Error(data));
+        }
+
+        // ValidationProblemDetails: flatten first field error
+        const validationErrors = data?.errors;
+        const firstValidationMessage = validationErrors
+            ? Object.values(validationErrors).flat().find(Boolean)
+            : null;
+
         const message =
-            error.response?.data?.message ||
-            error.response?.data?.mensaje ||
-            error.response?.data?.title ||
+            firstValidationMessage ||
+            data?.message ||
+            data?.mensaje ||
+            data?.title ||
             error.message ||
             "Error desconocido";
         return Promise.reject(new Error(message));
