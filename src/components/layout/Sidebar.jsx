@@ -2,35 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-    LayoutDashboard,
-    Package,
-    Warehouse,
-    Tag,
-    Ruler,
-    BarChart3,
-    ArrowLeftRight,
-    ShoppingCart,
-    Receipt,
-    ChefHat,
-    Users,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const inventoryItems = [
-    { href: "/productos", label: "Productos", icon: Package },
-    { href: "/almacenes", label: "Almacenes", icon: Warehouse },
-    { href: "/categorias", label: "Categorías", icon: Tag },
-    { href: "/unidades", label: "Unidades", icon: Ruler },
-    { href: "/stock", label: "Stock", icon: BarChart3 },
-    { href: "/movimientos", label: "Movimientos", icon: ArrowLeftRight },
+    { href: "/productos", label: "Productos" },
+    { href: "/almacenes", label: "Almacenes" },
+    { href: "/categorias", label: "Categorías" },
+    { href: "/unidades", label: "Unidades" },
+    { href: "/stock", label: "Stock" },
+    { href: "/movimientos", label: "Movimientos" },
 ];
 
 const salesItems = [
-    { href: "/ventas", label: "Ventas", icon: Receipt },
-    { href: "/pdv", label: "PDV", icon: ShoppingCart },
-    { href: "/kds", label: "KDS", icon: ChefHat },
-    { href: "/clientes", label: "Clientes", icon: Users },
+    { href: "/ventas", label: "Ventas" },
+    { href: "/pdv", label: "PDV" },
+    { href: "/kds", label: "KDS" },
+    { href: "/clientes", label: "Clientes" },
 ];
 
 export default function Sidebar() {
@@ -55,12 +42,11 @@ export default function Sidebar() {
                             : "text-(--foreground) hover:bg-[#bfa5e2] hover:text-(--foreground)"
                     )}
                 >
-                    <LayoutDashboard size={18} />
                     Dashboard
                 </Link>
 
                 <p className="px-3 pt-1 pb-2 text-[11px] uppercase tracking-wide text-(--foreground)/60">Inventario</p>
-                {inventoryItems.map(({ href, label, icon: Icon }) => (
+                {inventoryItems.map(({ href, label }) => (
                     <Link
                         key={href}
                         href={href}
@@ -71,13 +57,12 @@ export default function Sidebar() {
                                 : "text-(--foreground) hover:bg-[#bfa5e2] hover:text-(--foreground)"
                         )}
                     >
-                        <Icon size={18} />
                         {label}
                     </Link>
                 ))}
 
                 <p className="px-3 pt-4 pb-2 text-[11px] uppercase tracking-wide text-(--foreground)/60">Ventas</p>
-                {salesItems.map(({ href, label, icon: Icon }) => (
+                {salesItems.map(({ href, label }) => (
                     <Link
                         key={href}
                         href={href}
@@ -88,7 +73,6 @@ export default function Sidebar() {
                                 : "text-(--foreground) hover:bg-[#bfa5e2] hover:text-(--foreground)"
                         )}
                     >
-                        <Icon size={18} />
                         {label}
                     </Link>
                 ))}

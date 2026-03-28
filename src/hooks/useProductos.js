@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import api from "@/lib/api";
+import apiInventory from "@/lib/apiInventory";
 import { useEmpresa } from "@/context/EmpresaContext";
 
 export function useProductos(filters = {}) {
@@ -13,7 +13,7 @@ export function useProductos(filters = {}) {
 
     return useQuery({
         queryKey: ["productos", empresaId, filters],
-        queryFn: () => api.get(`/api/Productos?${params.toString()}`).then((r) => r.data),
+        queryFn: () => apiInventory.get(`/api/Productos?${params.toString()}`).then((r) => r.data),
         enabled: !!empresaId,
     });
 }
@@ -23,7 +23,7 @@ export function useCrearProducto() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: (data) => api.post("/api/Productos", data).then((r) => r.data),
+        mutationFn: (data) => apiInventory.post("/api/Productos", data).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["productos", empresaId] });
             queryClient.invalidateQueries({ queryKey: ["stock", empresaId] });
@@ -36,7 +36,7 @@ export function useActualizarProducto() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: ({ id, data }) => api.put(`/api/Productos/${id}`, data).then((r) => r.data),
+        mutationFn: ({ id, data }) => apiInventory.put(`/api/Productos/${id}`, data).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["productos", empresaId] });
         },
@@ -48,7 +48,7 @@ export function useCambiarEstadoProducto() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: ({ id, activo }) => api.patch(`/api/Productos/${id}/estado`, activo).then((r) => r.data),
+        mutationFn: ({ id, activo }) => apiInventory.patch(`/api/Productos/${id}/estado`, activo).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["productos", empresaId] });
         },
@@ -60,7 +60,7 @@ export function useCambiarAgotadoProducto() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: ({ id, agotado }) => api.patch(`/api/Productos/${id}/agotado`, agotado).then((r) => r.data),
+        mutationFn: ({ id, agotado }) => apiInventory.patch(`/api/Productos/${id}/agotado`, agotado).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["productos", empresaId] });
         },

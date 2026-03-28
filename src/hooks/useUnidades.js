@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import api from "@/lib/api";
+import apiInventory from "@/lib/apiInventory";
 import { useEmpresa } from "@/context/EmpresaContext";
 
 export function useUnidades() {
@@ -7,7 +7,7 @@ export function useUnidades() {
 
     return useQuery({
         queryKey: ["unidades", empresaId],
-        queryFn: () => api.get("/api/Unidades").then((r) => r.data),
+        queryFn: () => apiInventory.get("/api/Unidades").then((r) => r.data),
         enabled: !!empresaId,
     });
 }
@@ -17,7 +17,7 @@ export function useCrearUnidad() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: (data) => api.post("/api/Unidades", data).then((r) => r.data),
+        mutationFn: (data) => apiInventory.post("/api/Unidades", data).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["unidades", empresaId] });
         },
@@ -29,7 +29,7 @@ export function useActualizarUnidad() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: ({ id, data }) => api.put(`/api/Unidades/${id}`, data).then((r) => r.data),
+        mutationFn: ({ id, data }) => apiInventory.put(`/api/Unidades/${id}`, data).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["unidades", empresaId] });
         },
@@ -41,7 +41,7 @@ export function useCambiarEstadoUnidad() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: ({ id, activo }) => api.patch(`/api/Unidades/${id}/estado`, activo).then((r) => r.data),
+        mutationFn: ({ id, activo }) => apiInventory.patch(`/api/Unidades/${id}/estado`, activo).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["unidades", empresaId] });
         },

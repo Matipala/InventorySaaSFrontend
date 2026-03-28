@@ -25,7 +25,7 @@ export default function StockPage() {
     !!empresaId &&
     !!stockInicial.idProducto &&
     !!stockInicial.idAlmacen &&
-    Number(stockInicial.cantidad) > 0 &&
+    Number(stockInicial.cantidad) >= 0 &&
     !registrarInicial.isPending;
 
   const submitStockInicial = async (e) => {
@@ -41,8 +41,8 @@ export default function StockPage() {
     const idAlmacen = Number(stockInicial.idAlmacen);
     const cantidad = Number(stockInicial.cantidad);
 
-    if (!idProducto || !idAlmacen || !Number.isFinite(cantidad) || cantidad <= 0) {
-      setError("Completa producto, almacén y una cantidad mayor a 0.");
+    if (!idProducto || !idAlmacen || !Number.isFinite(cantidad) || cantidad < 0) {
+      setError("Completa producto, almacén y una cantidad mayor o igual a 0.");
       return;
     }
 
@@ -92,7 +92,7 @@ export default function StockPage() {
               <option value="">Almacén</option>
               {almacenes.map((a) => <option key={a.idAlmacen} value={a.idAlmacen}>{a.nombre}</option>)}
             </select>
-            <input type="number" min="1" value={stockInicial.cantidad} onChange={(e) => setStockInicial((p) => ({ ...p, cantidad: e.target.value }))} required placeholder="Cantidad" className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent" />
+            <input type="number" min="0" value={stockInicial.cantidad} onChange={(e) => setStockInicial((p) => ({ ...p, cantidad: e.target.value }))} required placeholder="Cantidad" className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent" />
           </div>
           <button
             type="submit"

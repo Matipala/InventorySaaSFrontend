@@ -13,7 +13,7 @@ import {
   Warehouse,
   ChevronRight,
 } from "lucide-react";
-import api from "@/lib/api";
+import apiInventory from "@/lib/apiInventory";
 import { useEmpresa } from "@/context/EmpresaContext";
 import { useProductos } from "@/hooks/useProductos";
 

@@ -61,6 +61,16 @@ export default function ProductosPage() {
       agotado86: form.agotado86,
     };
 
+    if (payload.precioVenta <= 0) {
+      setError("El precio de venta debe ser mayor a cero");
+      return;
+    }
+
+    if (!payload.idUnidad) {
+      setError("La unidad es obligatoria");
+      return;
+    }
+
     try {
       if (editId) {
         await actualizar.mutateAsync({ id: editId, data: payload });
@@ -138,13 +148,13 @@ export default function ProductosPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <input value={form.nombre} onChange={(e) => setForm((p) => ({ ...p, nombre: e.target.value }))} placeholder="Nombre" required className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent" />
           <input value={form.sku} onChange={(e) => setForm((p) => ({ ...p, sku: e.target.value }))} placeholder="SKU" required className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent" />
-          <input value={form.precioVenta} type="number" step="0.01" min="0" onChange={(e) => setForm((p) => ({ ...p, precioVenta: e.target.value }))} placeholder="Precio venta" required className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent" />
+          <input value={form.precioVenta} type="number" step="0.01" min="0.01" onChange={(e) => setForm((p) => ({ ...p, precioVenta: e.target.value }))} placeholder="Precio venta" required className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent" />
           <select value={form.idCategoria} onChange={(e) => setForm((p) => ({ ...p, idCategoria: e.target.value }))} required className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent">
             <option value="">Categoría</option>
             {categorias.map((c) => <option key={c.idCategoria} value={c.idCategoria}>{c.nombre}</option>)}
           </select>
-          <select value={form.idUnidad} onChange={(e) => setForm((p) => ({ ...p, idUnidad: e.target.value }))} className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent">
-            <option value="">Sin unidad</option>
+          <select value={form.idUnidad} onChange={(e) => setForm((p) => ({ ...p, idUnidad: e.target.value }))} required className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent">
+            <option value="">Unidad (Obligatorio)</option>
             {unidades.filter((u) => u.activo).map((u) => <option key={u.idUnidad} value={u.idUnidad}>{u.nombre}</option>)}
           </select>
           <div className="flex items-center gap-4 text-sm">
