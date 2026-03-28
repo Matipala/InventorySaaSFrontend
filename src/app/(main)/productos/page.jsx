@@ -18,6 +18,7 @@ const initialForm = {
   idCategoria: "",
   idUnidad: "",
   precioVenta: "",
+  estacion: "",
   activo: true,
   agotado86: false,
 };
@@ -57,6 +58,7 @@ export default function ProductosPage() {
       idCategoria: Number(form.idCategoria),
       idUnidad: form.idUnidad ? Number(form.idUnidad) : null,
       precioVenta: Number(form.precioVenta),
+      estacion: form.estacion || null,
       activo: form.activo,
       agotado86: form.agotado86,
     };
@@ -92,6 +94,7 @@ export default function ProductosPage() {
       idCategoria: String(p.idCategoria ?? ""),
       idUnidad: p.idUnidad ? String(p.idUnidad) : "",
       precioVenta: String(p.precioVenta ?? 0),
+      estacion: p.estacion || "",
       activo: p.activo,
       agotado86: p.agotado86,
     });
@@ -157,7 +160,13 @@ export default function ProductosPage() {
             <option value="">Unidad (Obligatorio)</option>
             {unidades.filter((u) => u.activo).map((u) => <option key={u.idUnidad} value={u.idUnidad}>{u.nombre}</option>)}
           </select>
-          <div className="flex items-center gap-4 text-sm">
+          <select value={form.estacion} onChange={(e) => setForm((p) => ({ ...p, estacion: e.target.value }))} className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent">
+            <option value="">Estación (Ninguna)</option>
+            <option value="COCINA">COCINA</option>
+            <option value="BAR">BAR</option>
+            <option value="PARRILLA">PARRILLA</option>
+          </select>
+          <div className="flex items-center gap-4 text-sm col-span-1 md:col-span-3">
             <label className="flex items-center gap-2"><input type="checkbox" checked={form.activo} onChange={(e) => setForm((p) => ({ ...p, activo: e.target.checked }))} />Activo</label>
             <label className="flex items-center gap-2"><input type="checkbox" checked={form.agotado86} onChange={(e) => setForm((p) => ({ ...p, agotado86: e.target.checked }))} />Agotado</label>
           </div>
@@ -199,6 +208,7 @@ export default function ProductosPage() {
                 <tr className="text-left border-b border-gray-200 dark:border-gray-800">
                   <th className="p-3">SKU</th>
                   <th className="p-3">Producto</th>
+                  <th className="p-3">Estación</th>
                   <th className="p-3">Precio</th>
                   <th className="p-3">Activo</th>
                   <th className="p-3">Agotado</th>
@@ -210,6 +220,11 @@ export default function ProductosPage() {
                   <tr key={p.idProducto} className="border-b border-gray-100 dark:border-gray-900">
                     <td className="p-3">{p.sku}</td>
                     <td className="p-3">{p.nombre}</td>
+                    <td className="p-3">
+                      <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                        {p.estacion || "N/A"}
+                      </span>
+                    </td>
                     <td className="p-3">Bs {Number(p.precioVenta ?? 0).toFixed(2)}</td>
                     <td className="p-3">{p.activo ? "Sí" : "No"}</td>
                     <td className="p-3">{p.agotado86 ? "Sí" : "No"}</td>

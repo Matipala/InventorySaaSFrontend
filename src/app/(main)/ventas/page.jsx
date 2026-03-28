@@ -35,10 +35,6 @@ export default function VentasPage() {
                 ))}
             </div>
 
-            <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-5 text-sm text-(--foreground)/70 flex items-center gap-3">
-                <Receipt size={18} />
-                Próximo paso: integrar cuentas/tickets en tiempo real desde backend.
-            </div>
         </div>
     );
 }

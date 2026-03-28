@@ -3,21 +3,36 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import {
+    LayoutDashboard,
+    Package,
+    Warehouse,
+    Tags,
+    Ruler,
+    TrendingUp,
+    ArrowLeftRight,
+    ShoppingCart,
+    Users,
+    Monitor,
+    Settings,
+    FileText
+} from "lucide-react";
 
 const inventoryItems = [
-    { href: "/productos", label: "Productos" },
-    { href: "/almacenes", label: "Almacenes" },
-    { href: "/categorias", label: "Categorías" },
-    { href: "/unidades", label: "Unidades" },
-    { href: "/stock", label: "Stock" },
-    { href: "/movimientos", label: "Movimientos" },
+    { href: "/productos", label: "Productos", icon: Package },
+    { href: "/almacenes", label: "Almacenes", icon: Warehouse },
+    { href: "/categorias", label: "Categorías", icon: Tags },
+    { href: "/unidades", label: "Unidades", icon: Ruler },
+    { href: "/stock", label: "Stock", icon: TrendingUp },
+    { href: "/movimientos", label: "Movimientos", icon: ArrowLeftRight },
 ];
 
 const salesItems = [
-    { href: "/ventas", label: "Ventas" },
-    { href: "/pdv", label: "PDV" },
-    { href: "/kds", label: "KDS" },
-    { href: "/clientes", label: "Clientes" },
+    { href: "/ventas", label: "Ventas", icon: FileText },
+    { href: "/pdv", label: "PDV", icon: ShoppingCart },
+    { href: "/kds", label: "KDS", icon: Monitor },
+    { href: "/clientes", label: "Clientes", icon: Users },
+    { href: "/configuracion", label: "Configuración", icon: Settings },
 ];
 
 export default function Sidebar() {
@@ -28,7 +43,6 @@ export default function Sidebar() {
             {/* Brand */}
             <div className="p-6 border-b border-[#bfa5e2] dark:border-[#43206b]">
                 <h1 className="text-xl font-bold text-(--foreground)">Inventory SaaS</h1>
-                <p className="text-xs text-(--foreground) mt-1">Gestión de inventario</p>
             </div>
 
             {/* Navigation */}
@@ -42,11 +56,12 @@ export default function Sidebar() {
                             : "text-(--foreground) hover:bg-[#bfa5e2] hover:text-(--foreground)"
                     )}
                 >
+                    <LayoutDashboard size={18} />
                     Dashboard
                 </Link>
 
                 <p className="px-3 pt-1 pb-2 text-[11px] uppercase tracking-wide text-(--foreground)/60">Inventario</p>
-                {inventoryItems.map(({ href, label }) => (
+                {inventoryItems.map(({ href, label, icon: Icon }) => (
                     <Link
                         key={href}
                         href={href}
@@ -57,12 +72,13 @@ export default function Sidebar() {
                                 : "text-(--foreground) hover:bg-[#bfa5e2] hover:text-(--foreground)"
                         )}
                     >
+                        <Icon size={18} />
                         {label}
                     </Link>
                 ))}
 
                 <p className="px-3 pt-4 pb-2 text-[11px] uppercase tracking-wide text-(--foreground)/60">Ventas</p>
-                {salesItems.map(({ href, label }) => (
+                {salesItems.map(({ href, label, icon: Icon }) => (
                     <Link
                         key={href}
                         href={href}
@@ -73,6 +89,7 @@ export default function Sidebar() {
                                 : "text-(--foreground) hover:bg-[#bfa5e2] hover:text-(--foreground)"
                         )}
                     >
+                        <Icon size={18} />
                         {label}
                     </Link>
                 ))}
