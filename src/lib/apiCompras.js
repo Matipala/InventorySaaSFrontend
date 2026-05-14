@@ -1,15 +1,15 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_VENTAS_API_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_COMPRAS_API_URL || "http://localhost:5432";
 
-const apiVentas = axios.create({
+const apiCompras = axios.create({
     baseURL: API_BASE_URL,
     headers: {
         "Content-Type": "application/json",
     },
 });
 
-apiVentas.interceptors.request.use((config) => {
+apiCompras.interceptors.request.use((config) => {
     if (typeof window !== "undefined") {
         const empresaId = localStorage.getItem("empresaId");
         if (empresaId) {
@@ -20,7 +20,7 @@ apiVentas.interceptors.request.use((config) => {
     return config;
 });
 
-apiVentas.interceptors.response.use(
+apiCompras.interceptors.response.use(
     (response) => response,
     (error) => {
         const data = error.response?.data;
@@ -47,4 +47,4 @@ apiVentas.interceptors.response.use(
     }
 );
 
-export default apiVentas;
+export default apiCompras;

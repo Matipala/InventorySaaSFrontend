@@ -11,6 +11,7 @@ import {
     Ruler,
     TrendingUp,
     ArrowLeftRight,
+    Receipt,
     ShoppingCart,
     Users,
     Monitor,
@@ -31,8 +32,11 @@ const salesItems = [
     { href: "/ventas", label: "Ventas", icon: FileText },
     { href: "/pdv", label: "PDV", icon: ShoppingCart },
     { href: "/kds", label: "KDS", icon: Monitor },
-    { href: "/clientes", label: "Clientes", icon: Users },
     { href: "/configuracion", label: "Configuración", icon: Settings },
+];
+
+const purchaseItems = [
+    { href: "/compras", label: "Compras", icon: Receipt },
 ];
 
 export default function Sidebar() {
@@ -79,6 +83,23 @@ export default function Sidebar() {
 
                 <p className="px-3 pt-4 pb-2 text-[11px] uppercase tracking-wide text-(--foreground)/60">Ventas</p>
                 {salesItems.map(({ href, label, icon: Icon }) => (
+                    <Link
+                        key={href}
+                        href={href}
+                        className={cn(
+                            "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                            pathname === href
+                                ? "bg-[#43206b] text-(--foreground) dark:bg-[#43206b] dark:text-(--foreground)"
+                                : "text-(--foreground) hover:bg-[#bfa5e2] hover:text-(--foreground)"
+                        )}
+                    >
+                        <Icon size={18} />
+                        {label}
+                    </Link>
+                ))}
+
+                <p className="px-3 pt-4 pb-2 text-[11px] uppercase tracking-wide text-(--foreground)/60">Compras</p>
+                {purchaseItems.map(({ href, label, icon: Icon }) => (
                     <Link
                         key={href}
                         href={href}

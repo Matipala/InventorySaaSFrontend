@@ -30,6 +30,13 @@ El sistema cubre el ciclo de vida completo de la gestión de inventarios, desde 
 - Node.js 18.x o superior
 - NPM o Yarn
 
+### Backends (Docker)
+Si vas a consumir las APIs locales, levanta los backends con Docker desde la raiz del workspace:
+```bash
+docker compose up --build
+```
+Esto publica Inventario en http://localhost:0000 y Ventas en http://localhost:0000.
+
 ### Pasos para iniciar el proyecto
 1. **Instalar dependencias:**
    ```bash

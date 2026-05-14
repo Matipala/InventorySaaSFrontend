@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, AlertCircle } from "lucide-react";
 import { useStock, useRegistrarStockInicial, useAjusteStock } from "@/hooks/useStock";
 import { useProductos } from "@/hooks/useProductos";
 import { useAlmacenes } from "@/hooks/useAlmacenes";
@@ -54,7 +54,7 @@ export default function StockPage() {
       });
       setStockInicial({ idProducto: "", idAlmacen: "", cantidad: "" });
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.mensaje || err.response?.data?.title || err.message || "Ocurrió un error inesperado.");
     }
   };
 
@@ -70,7 +70,7 @@ export default function StockPage() {
       });
       setAjuste({ idProducto: "", idAlmacen: "", nuevaCantidad: "", motivo: "" });
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.mensaje || err.response?.data?.title || err.message || "Ocurrió un error inesperado.");
     }
   };
 
@@ -121,7 +121,15 @@ export default function StockPage() {
         </form>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && (
+        <div className="flex items-start gap-3 rounded-xl border border-red-200/50 dark:border-red-900/50 bg-red-50/50 dark:bg-red-900/10 p-4 text-red-600 dark:text-red-400">
+          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold mb-1">No se pudo completar la operación</h3>
+            <p className="text-sm opacity-90">{error}</p>
+          </div>
+        </div>
+      )}
 
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-(--background)">
         <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800 flex items-center gap-2">

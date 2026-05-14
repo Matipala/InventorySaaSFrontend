@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Tag } from "lucide-react";
 import { useActualizarCategoria, useCategorias, useCrearCategoria } from "@/hooks/useCategorias";
+import { AlertError } from "@/components/ui/AlertError";
 
 export default function CategoriasPage() {
   const [nombre, setNombre] = useState("");
@@ -28,7 +29,7 @@ export default function CategoriasPage() {
       setNombre("");
       setEditId(null);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.mensaje || err.response?.data?.title || err.message || "Ocurrió un error inesperado.");
     }
   };
 
@@ -65,7 +66,7 @@ export default function CategoriasPage() {
             )}
           </div>
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        <AlertError error={error} />
       </form>
 
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-(--background)">

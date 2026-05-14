@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Ruler } from "lucide-react";
 import { useCambiarEstadoUnidad, useCrearUnidad, useUnidades, useActualizarUnidad } from "@/hooks/useUnidades";
+import { AlertError } from "@/components/ui/AlertError";
 
 const initialForm = { nombre: "", abreviatura: "", activo: true };
 
@@ -30,7 +31,7 @@ export default function UnidadesPage() {
             setForm(initialForm);
             setEditId(null);
         } catch (err) {
-            setError(err.message);
+            setError(err.response?.data?.mensaje || err.response?.data?.title || err.message || "Ocurrió un error inesperado.");
         }
     };
 
@@ -78,7 +79,7 @@ export default function UnidadesPage() {
                     </label>
                 </div>
 
-                {error && <p className="text-sm text-red-600">{error}</p>}
+                <AlertError error={error} />
 
                 <div className="flex gap-2">
                     <button

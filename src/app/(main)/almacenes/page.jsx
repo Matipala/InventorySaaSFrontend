@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Warehouse } from "lucide-react";
 import apiInventory from "@/lib/apiInventory";
 import { useAlmacenes } from "@/hooks/useAlmacenes";
+import { AlertError } from "@/components/ui/AlertError";
 
 export default function AlmacenesPage() {
   const [nombre, setNombre] = useState("");
@@ -23,7 +24,7 @@ export default function AlmacenesPage() {
       setNombre("");
       refetch();
     } catch (err) {
-      setError(err.message || "Error al crear almacén");
+      setError(err.response?.data?.mensaje || err.response?.data?.title || err.message || "Error al crear almacén");
     } finally {
       setLoading(false);
     }
@@ -55,7 +56,7 @@ export default function AlmacenesPage() {
             {loading ? "Creando..." : "Crear almacén"}
           </button>
         </form>
-        {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+        <AlertError error={error} />
         {success && <p className="text-green-600 text-sm mt-2">{success}</p>}
       </div>
       <div className="mt-6">

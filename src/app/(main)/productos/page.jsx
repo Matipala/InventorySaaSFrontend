@@ -11,6 +11,7 @@ import {
 } from "@/hooks/useProductos";
 import { useCategorias } from "@/hooks/useCategorias";
 import { useUnidades } from "@/hooks/useUnidades";
+import { AlertError } from "@/components/ui/AlertError";
 
 const initialForm = {
   nombre: "",
@@ -82,7 +83,7 @@ export default function ProductosPage() {
       setForm(initialForm);
       setEditId(null);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.mensaje || err.response?.data?.title || err.message || "Ocurrió un error inesperado.");
     }
   };
 

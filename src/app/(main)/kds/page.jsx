@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import apiVentas from "@/lib/apiVentas";
+import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { Coffee, Utensils, Clock, User, ClipboardList } from "lucide-react";
 import { useProductos } from "@/hooks/useProductos";
 
@@ -24,8 +25,24 @@ export default function KdsPage() {
 
     useEffect(() => {
         fetchKds();
-        const interval = setInterval(fetchKds, 10000); // Polling cada 10s
-        return () => clearInterval(interval);
+
+        const connection = new HubConnectionBuilder()
+            .withUrl(`${process.env.NEXT_PUBLIC_VENTAS_API_URL}/api/ventas/hubs/kds`)
+            .configureLogging(LogLevel.Warning)
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("UpdateKds", () => {
+            fetchKds();
+        });
+
+        connection.start()
+            .then(() => console.log("Conectado a KDS SignalR en tiempo real"))
+            .catch(err => console.error("Error al conectar KDS SignalR:", err));
+
+        return () => {
+            connection.stop();
+        };
     }, [estacion]);
 
     // Filtrar ítems por la estación del producto
@@ -36,11 +53,20 @@ export default function KdsPage() {
     });
 
     const handleCambiarEstado = async (id, nuevoEstado) => {
+        // Actualización Optimista
+        const itemsPrevios = [...items];
+        setItems(actuales =>
+            actuales.map(item =>
+                item.idCuentaTicketItem === id ? { ...item, estadoComanda: nuevoEstado } : item
+            )
+        );
+
         try {
             await apiVentas.patch(`/api/ventas/kds/items/${id}/estado`, { nuevoEstado });
-            fetchKds(); // Recargar
+            // SignalR se encargará de notificar a los demás y a nosotros mismos para sincronizar
         } catch (e) {
             alert("Error al actualizar estado");
+            setItems(itemsPrevios); // Revertir en caso de error
         }
     };
 
@@ -73,11 +99,10 @@ export default function KdsPage() {
                 {itemsFiltrados.map(it => (
                     <div
                         key={it.idCuentaTicketItem}
-                        className={`bg-(--background) border-l-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex flex-col gap-2 animate-in fade-in duration-500 ${
-                            it.estadoComanda === "PREPARACION" ? "border-l-orange-500" : 
-                            it.estadoComanda === "LISTO" ? "border-l-green-500 bg-green-50/10" : 
-                            "border-l-blue-500"
-                        }`}
+                        className={`bg-(--background) border-l-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex flex-col gap-2 animate-in fade-in duration-500 ${it.estadoComanda === "PREPARACION" ? "border-l-orange-500" :
+                            it.estadoComanda === "LISTO" ? "border-l-green-500 bg-green-50/10" :
+                                "border-l-blue-500"
+                            }`}
                     >
                         <div className="flex justify-between items-start">
                             <span className="bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 text-xs font-black px-2 py-0.5 rounded">
@@ -93,40 +118,39 @@ export default function KdsPage() {
                                 {productos.find(p => p.idProducto === it.idProducto)?.nombre || `Producto ${it.idProducto}`}
                             </p>
                             <p className="text-2xl font-black text-purple-600 mt-1">x{it.cantidad}</p>
-                            
+
                             <div className="mt-2">
-                                <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-full ${
-                                    it.estadoComanda === "PREPARACION" ? "bg-orange-100 text-orange-700" : 
+                                <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-full ${it.estadoComanda === "PREPARACION" ? "bg-orange-100 text-orange-700" :
                                     it.estadoComanda === "LISTO" ? "bg-green-100 text-green-700" :
-                                    "bg-blue-100 text-blue-700"
-                                }`}>
+                                        "bg-blue-100 text-blue-700"
+                                    }`}>
                                     {it.estadoComanda === "LISTO" ? "✓ Listo para retirar" : it.estadoComanda}
                                 </span>
                             </div>
 
                             {it.nota && (
-                                <div className="mt-3 p-2 bg-orange-50 dark:bg-orange-900/20 border-l-2 border-l-orange-400 rounded-sm">
-                                    <p className="text-sm font-semibold text-orange-700 dark:text-orange-300">NOTA:</p>
-                                    <p className="text-sm text-orange-600 dark:text-orange-400 font-bold">{it.nota}</p>
+                                <div className="mt-3 p-2 bg-violet-50 dark:bg-violet-900/20 border-l-2 border-l-violet-400 rounded-sm">
+                                    <p className="text-sm font-semibold text-black dark:text-white">NOTA:</p>
+                                    <p className="text-sm text-black dark:text-white font-bold">{it.nota}</p>
                                 </div>
                             )}
                         </div>
 
                         <div className="mt-4 flex flex-col gap-2">
                             {it.estadoComanda === "PENDIENTE" && (
-                                <button 
+                                <button
                                     onClick={() => handleCambiarEstado(it.idCuentaTicketItem, "PREPARACION")}
-                                    className="w-full bg-orange-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-orange-700"
+                                    className="w-full bg-violet-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-violet-700"
                                 >
                                     Empezar Preparación
                                 </button>
                             )}
                             {it.estadoComanda === "PREPARACION" && (
-                                <button 
+                                <button
                                     onClick={() => handleCambiarEstado(it.idCuentaTicketItem, "LISTO")}
                                     className="w-full bg-green-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-green-700"
                                 >
-                                    Marcar como Listo
+                                    Listo
                                 </button>
                             )}
                             {it.estadoComanda === "LISTO" && (

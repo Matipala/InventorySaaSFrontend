@@ -11,9 +11,10 @@ const apiInventory = axios.create({
 
 apiInventory.interceptors.request.use((config) => {
     if (typeof window !== "undefined") {
-        const empresaId = localStorage.getItem("empresaId");
+        const empresaId = localStorage.getItem("empresaId") || localStorage.getItem("empresaid");
         if (empresaId) {
-            config.headers["x-empresa-id"] = empresaId;
+            const cleanId = empresaId.toString().replace(/^emp-/i, "");
+            config.headers["x-empresa-id"] = cleanId;
         }
     }
     return config;
@@ -30,13 +31,18 @@ apiInventory.interceptors.response.use(
         const firstValidationMessage = validationErrors
             ? Object.values(validationErrors).flat().find(Boolean)
             : null;
-        const message =
+        let message =
             firstValidationMessage ||
             data?.message ||
             data?.mensaje ||
             data?.title ||
             error.message ||
             "Error desconocido";
+
+        if (message === "Network Error") {
+            message = "No se pudo conectar con el servidor. Verifica tu conexión o intenta más tarde.";
+        }
+
         return Promise.reject(new Error(message));
     }
 );
