@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import api from "@/lib/api";
+import apiInventory from "@/lib/apiInventory";
 import { useEmpresa } from "@/context/EmpresaContext";
 
 export function useMovimientos(filters = {}) {
@@ -13,7 +13,7 @@ export function useMovimientos(filters = {}) {
     return useQuery({
         queryKey: ["movimientos", empresaId, filters],
         queryFn: () =>
-            api
+            apiInventory
                 .get(`/api/Movimientos?${params.toString()}`)
                 .then((r) => r.data),
         enabled: !!empresaId,
@@ -26,7 +26,7 @@ export function useCrearMovimiento() {
 
     return useMutation({
         mutationFn: (data) =>
-            api.post("/api/Movimientos", data).then((r) => r.data),
+            apiInventory.post("/api/Movimientos", data).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["movimientos", empresaId] });
             queryClient.invalidateQueries({ queryKey: ["stock", empresaId] });

@@ -83,7 +83,8 @@ function EntradaForm({ onClose }) {
         }, 1500);
       },
       onError: (err) => {
-        setToast({ type: "error", msg: err.message });
+        const msg = err.response?.data?.mensaje || err.response?.data?.title || err.message || "Ocurrió un error inesperado.";
+        setToast({ type: "error", msg });
       },
     });
   };

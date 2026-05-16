@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import ThemeToggleButton from "../ThemeToggleButton";
 import { Building2 } from "lucide-react";
 import { useEmpresa } from "@/context/EmpresaContext";
-import api from "@/lib/api";
+import apiInventory from "@/lib/apiInventory";
 
 export default function Header() {
     const { empresaId, setEmpresaId } = useEmpresa();
@@ -12,7 +12,7 @@ export default function Header() {
 
     useEffect(() => {
         // List all companies without empresa header (no filter needed)
-        api
+        apiInventory
             .get("/api/Empresa")
             .then((res) => setEmpresas(res.data))
             .catch(() => { });
