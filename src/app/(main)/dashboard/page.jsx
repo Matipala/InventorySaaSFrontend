@@ -12,228 +12,188 @@ import {
   Receipt,
   Warehouse,
   ChevronRight,
+  TrendingUp,
+  Clock,
+  ArrowUpRight,
+  ArrowDownRight,
 } from "lucide-react";
 import apiInventory from "@/lib/apiInventory";
 import apiVentas from "@/lib/apiVentas";
 import { useEmpresa } from "@/context/EmpresaContext";
-import { useProductos } from "@/hooks/useProductos";
-
-function StatCard({ icon: Icon, label, value, color = "blue" }) {
-  const colors = {
-    blue: "bg-(--background) text-(--foreground) border-blue-200 dark:border-blue-700",
-    red: "bg-(--background) text-(--foreground) border-red-200 dark:border-red-700",
-    yellow: "bg-(--background) text-(--foreground) border-yellow-200 dark:border-yellow-700",
-    green: "bg-(--background) text-(--foreground) border-green-200 dark:border-green-700",
-  };
-  return (
-    <div className={`rounded-xl border p-5 flex items-center gap-4 ${colors[color]}`}>
-      <div className="p-2 rounded-lg bg-(--background)/60">
-        <Icon size={22} />
-      </div>
-      <div>
-        <p className="text-xs font-medium uppercase tracking-wide opacity-70">{label}</p>
-        <p className="text-3xl font-bold mt-0.5">{value ?? "—"}</p>
-      </div>
-    </div>
-  );
-}
-
-function AlertList({ title, icon: Icon, items, renderItem, emptyMsg }) {
-  return (
-    <div className="bg-(--background) rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center gap-2">
-        <Icon size={18} className="text-(--foreground)/70" />
-        <h2 className="text-sm font-semibold text-(--foreground)">{title}</h2>
-        <span className="ml-auto text-xs bg-(--background) text-(--foreground)/70 px-2 py-0.5 rounded-full">
-          {items?.length ?? 0}
-        </span>
-      </div>
-      <ul className="divide-y divide-gray-200 dark:divide-gray-800 max-h-64 overflow-y-auto">
-        {items?.length === 0 && (
-          <li className="px-5 py-4 text-sm text-(--foreground)/60 text-center">{emptyMsg}</li>
-        )}
-        {items?.map((item, i) => (
-          <li key={i} className="px-5 py-3 text-sm text-(--foreground)">
-            {renderItem(item)}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function ModuleCard({ title, subtitle, icon: Icon, links }) {
-  return (
-    <section className="bg-(--background) rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-(--background)/60 border border-gray-200 dark:border-gray-700">
-          <Icon size={18} />
-        </div>
-        <div>
-          <h2 className="text-base font-semibold text-(--foreground)">{title}</h2>
-          <p className="text-xs text-(--foreground)/70">{subtitle}</p>
-        </div>
-      </div>
-
-      <div className="p-3 space-y-2">
-        {links.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="group flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3 hover:bg-[#ece3f8] dark:hover:bg-[#2b173e] transition-colors"
-          >
-            <div>
-              <p className="text-sm font-semibold text-(--foreground)">{item.label}</p>
-              <p className="text-xs text-(--foreground)/70 mt-0.5">{item.description}</p>
-            </div>
-            <ChevronRight size={16} className="text-(--foreground)/60 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
+import { formatCurrency } from "@/lib/utils";
 
 export default function DashboardPage() {
-  const { empresaId } = useEmpresa();
-  const { data: productos } = useProductos();
+  const { empresaId, loading: empresaLoading } = useEmpresa();
 
-  const { data: stockBajo } = useQuery({
-    queryKey: ["alertas-stock-bajo", empresaId],
-    queryFn: () => apiInventory.get("/api/Stock/alertas/bajo?umbral=10").then((r) => r.data),
+  // Alertas de Stock Bajo (Inventario)
+  const { data: stockBajo, isLoading: loadingStockBajo } = useQuery({
+    queryKey: ["dashboard", "stock-bajo", empresaId],
+    queryFn: () =>
+      apiInventory.get(`/api/inventory/companies/${empresaId}/dashboard`).then((r) => r.data),
     enabled: !!empresaId,
   });
 
-  const { data: stockAgotado } = useQuery({
-    queryKey: ["alertas-stock-agotado", empresaId],
-    queryFn: () => apiInventory.get("/api/Stock/alertas/agotado").then((r) => r.data),
+  // Resumen Diario (Ventas)
+  const { data: resumenDiario, isLoading: loadingResumen } = useQuery({
+    queryKey: ["dashboard", "resumen-diario", empresaId],
+    queryFn: () =>
+      apiVentas.get(`/api/sales/companies/${empresaId}/dashboard/daily-sales`).then((r) => r.data),
     enabled: !!empresaId,
   });
 
-  const { data: resumenVentas } = useQuery({
-    queryKey: ["resumen-ventas-diario", empresaId],
-    queryFn: () => apiVentas.get("/api/ventas/dashboard/resumen-diario").then((r) => r.data),
+  // Carga de KDS (Ventas)
+  const { data: cargaKds, isLoading: loadingKds } = useQuery({
+    queryKey: ["dashboard", "carga-kds", empresaId],
+    queryFn: () =>
+      apiVentas.get(`/api/sales/companies/${empresaId}/dashboard/kds-status`).then((r) => r.data),
     enabled: !!empresaId,
   });
 
-  const { data: cargaKds } = useQuery({
-    queryKey: ["carga-kds", empresaId],
-    queryFn: () => apiVentas.get("/api/ventas/dashboard/carga-kds").then((r) => r.data),
+  // Top Productos (Ventas)
+  const { data: topProductos, isLoading: loadingTop } = useQuery({
+    queryKey: ["dashboard", "top-productos", empresaId],
+    queryFn: () =>
+      apiVentas.get(`/api/sales/companies/${empresaId}/dashboard/top-products`).then((r) => r.data),
     enabled: !!empresaId,
   });
 
-  const { data: topProductos } = useQuery({
-    queryKey: ["top-productos", empresaId],
-    queryFn: () => apiVentas.get("/api/ventas/dashboard/top-productos").then((r) => r.data),
-    enabled: !!empresaId,
-  });
+  if (empresaLoading) return <div className="p-8">Cargando empresa...</div>;
+  if (!empresaId) return <div className="p-8">Selecciona una empresa en el encabezado.</div>;
 
-  if (!empresaId) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full gap-4 text-(--foreground)/60 mt-20">
-        <Warehouse size={48} className="opacity-40" />
-        <p className="text-lg font-medium">Selecciona una empresa para continuar</p>
-        <p className="text-sm">Usa el selector en la parte superior derecha.</p>
-      </div>
-    );
-  }
+  const stats = [
+    {
+      title: "Ventas del Día",
+      value: formatCurrency(resumenDiario?.totalVentas || 0),
+      icon: TrendingUp,
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
+      trend: "+12.5%",
+      trendColor: "text-emerald-600",
+    },
+    {
+      title: "Tickets Activos",
+      value: resumenDiario?.cantidadTickets || 0,
+      icon: Receipt,
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+      trend: "En curso",
+      trendColor: "text-blue-600",
+    },
+    {
+      title: "Stock Agotado",
+      value: stockBajo?.outOfStockCount || 0,
+      icon: PackageX,
+      color: "text-red-600",
+      bg: "bg-red-50",
+      trend: "Crítico",
+      trendColor: "text-red-600",
+    },
+    {
+      title: "Carga Cocina",
+      value: cargaKds?.length || 0,
+      icon: ChefHat,
+      color: "text-amber-600",
+      bg: "bg-amber-50",
+      trend: "Media",
+      trendColor: "text-amber-600",
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-(--foreground)">Dashboard</h1>
-        <p className="text-sm text-(--foreground)/70 mt-1">Resumen del estado del inventario</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Panel de Control</h1>
+          <p className="text-muted-foreground">Bienvenido al resumen operativo de tu negocio.</p>
+        </div>
+        <div className="flex gap-2">
+            <Link href="/pdv" className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4" />
+                Nuevo Ticket
+            </Link>
+        </div>
       </div>
 
-      {/* Stat cards principales - Inventario */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={Package}
-          label="Total Productos"
-          value={productos?.length}
-          color="blue"
-        />
-        <StatCard
-          icon={AlertTriangle}
-          label="Stock Bajo"
-          value={stockBajo?.length}
-          color="yellow"
-        />
-        <StatCard
-          icon={Receipt}
-          label="Ventas Hoy"
-          value={`$${resumenVentas?.totalVentas?.toFixed(2) || "0.00"}`}
-          color="green"
-        />
-        <StatCard
-          icon={ShoppingCart}
-          label="Tickets Hoy"
-          value={resumenVentas?.cantidadTickets}
-          color="blue"
-        />
+      {/* Grid de Estadísticas */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat, i) => (
+          <div key={i} className="bg-card rounded-xl border p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div className={`p-2 rounded-lg ${stat.bg}`}>
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              </div>
+              <span className={`text-xs font-medium ${stat.trendColor}`}>{stat.trend}</span>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+              <h3 className="text-2xl font-bold">{stat.value}</h3>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-6">
-            <AlertList 
-                title="Top 5 Productos Hoy"
-                icon={ShoppingCart}
-                items={topProductos}
-                emptyMsg="No hay ventas hoy"
-                renderItem={(it) => (
-                    <div className="flex justify-between items-center">
-                        <span className="font-medium text-purple-700 dark:text-purple-300">
-                            {productos?.find(p => p.idProducto === it.idProducto)?.nombre || `Producto ${it.idProducto}`}
-                        </span>
-                        <span className="font-black bg-purple-100 px-2 py-0.5 rounded text-purple-700">x{it.cantidad}</span>
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Alertas de Inventario */}
+        <div className="bg-card rounded-xl border shadow-sm flex flex-col">
+            <div className="p-6 border-b flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold">
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                    Alertas de Stock
+                </div>
+                <Link href="/stock" className="text-xs text-primary hover:underline flex items-center gap-1">
+                    Ver todo <ChevronRight className="w-3 h-3" />
+                </Link>
+            </div>
+            <div className="p-0 flex-1">
+                {loadingStockBajo ? (
+                    <div className="p-8 text-center text-sm text-muted-foreground italic">Consultando inventario...</div>
+                ) : stockBajo?.outOfStockCount > 0 ? (
+                    <div className="p-6 text-center text-sm text-red-500 font-medium">
+                        ¡Atención! Tienes {stockBajo.outOfStockCount} productos agotados.
                     </div>
+                ) : (
+                    <div className="p-8 text-center text-sm text-muted-foreground italic">No hay alertas críticas de stock.</div>
                 )}
-            />
-
-            <AlertList 
-                title="Carga en Cocina / KDS"
-                icon={ChefHat}
-                items={cargaKds}
-                emptyMsg="Cocina al día"
-                renderItem={(it) => (
-                    <div className="flex justify-between items-center">
-                        <span className="font-bold text-gray-600 dark:text-gray-400">{it.estado}</span>
-                        <span className={`font-black px-2 py-0.5 rounded ${it.estado === 'PENDIENTE' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
-                            {it.cantidad} pedidos
-                        </span>
-                    </div>
-                )}
-            />
+            </div>
         </div>
 
-        <div className="space-y-4">
-            <AlertList 
-                title="Alertas de Stock Bajo"
-                icon={AlertTriangle}
-                items={stockBajo}
-                emptyMsg="Stock saludable"
-                renderItem={(it) => (
-                    <div className="flex flex-col gap-1">
-                        <div className="flex justify-between">
-                            <span className="font-bold uppercase text-xs">{it.productoNombre}</span>
-                            <span className="text-red-500 font-black">{it.cantidad} unid.</span>
-                        </div>
-                        <span className="text-[10px] text-gray-400">Almacén: {it.almacenNombre}</span>
+        {/* Top Productos */}
+        <div className="bg-card rounded-xl border shadow-sm">
+            <div className="p-6 border-b flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold">
+                    <TrendingUp className="w-5 h-5 text-emerald-500" />
+                    Top Productos del Día
+                </div>
+            </div>
+            <div className="p-0">
+                {loadingTop ? (
+                    <div className="p-8 text-center text-sm text-muted-foreground italic">Cargando...</div>
+                ) : topProductos?.length > 0 ? (
+                    <div className="divide-y">
+                        {topProductos.map((p, i) => (
+                            <div key={i} className="px-6 py-4 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-sm font-bold text-muted-foreground">#{i+1}</span>
+                                    <div>
+                                        <p className="text-sm font-medium">Producto ID: {p.idProducto}</p>
+                                        <p className="text-xs text-muted-foreground">{p.cantidad} unidades vendidas</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="w-12 h-1.5 bg-secondary rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-emerald-500" 
+                                            style={{ width: `${(p.cantidad / topProductos[0].cantidad) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
+                ) : (
+                    <div className="p-8 text-center text-sm text-muted-foreground italic">Sin ventas registradas hoy.</div>
                 )}
-            />
-            <AlertList 
-                title="Productos Agotados"
-                icon={PackageX}
-                items={stockAgotado}
-                emptyMsg="Sin faltantes críticos"
-                renderItem={(it) => (
-                    <div className="flex justify-between items-center">
-                        <span className="font-bold text-red-600 uppercase text-xs tracking-tight">{it.productoNombre}</span>
-                        <span className="bg-red-50 text-red-700 text-[10px] font-black px-2 py-0.5 rounded">AGOTADO</span>
-                    </div>
-                )}
-            />
+            </div>
         </div>
       </div>
 

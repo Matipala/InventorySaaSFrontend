@@ -10,17 +10,17 @@ export function EmpresaProvider({ children }) {
 
     useEffect(() => {
         const stored = localStorage.getItem("empresaId");
-        if (stored) setEmpresaIdState(Number(stored));
+        if (stored) setEmpresaIdState(stored);
         setLoading(false);
     }, []);
 
     const setEmpresaId = (id) => {
         if (id) {
-            localStorage.setItem("empresaId", String(id));
+            localStorage.setItem("empresaId", id);
         } else {
             localStorage.removeItem("empresaId");
         }
-        setEmpresaIdState(id ? Number(id) : null);
+        setEmpresaIdState(id || null);
     };
 
     return (

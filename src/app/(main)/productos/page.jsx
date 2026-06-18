@@ -33,8 +33,8 @@ export default function ProductosPage() {
   const queryFilters = useMemo(
     () => ({
       q: filters.q || undefined,
-      idCategoria: filters.idCategoria ? Number(filters.idCategoria) : undefined,
-      idUnidad: filters.idUnidad ? Number(filters.idUnidad) : undefined,
+      idCategoria: filters.idCategoria || undefined,
+      idUnidad: filters.idUnidad || undefined,
       activo: filters.activo === "" ? undefined : filters.activo === "true",
     }),
     [filters]
@@ -56,8 +56,8 @@ export default function ProductosPage() {
     const payload = {
       nombre: form.nombre,
       sku: form.sku,
-      idCategoria: Number(form.idCategoria),
-      idUnidad: form.idUnidad ? Number(form.idUnidad) : null,
+      idCategoria: form.idCategoria,
+      idUnidad: form.idUnidad || null,
       precioVenta: Number(form.precioVenta),
       estacion: form.estacion || null,
       activo: form.activo,
@@ -88,16 +88,17 @@ export default function ProductosPage() {
   };
 
   const startEdit = (p) => {
-    setEditId(p.idProducto);
+    const idProducto = p.idProducto || p.IdProducto || p.productCen || p.ProductCen;
+    setEditId(idProducto);
     setForm({
-      nombre: p.nombre,
-      sku: p.sku,
-      idCategoria: String(p.idCategoria ?? ""),
-      idUnidad: p.idUnidad ? String(p.idUnidad) : "",
-      precioVenta: String(p.precioVenta ?? 0),
-      estacion: p.estacion || "",
-      activo: p.activo,
-      agotado86: p.agotado86,
+      nombre: p.nombre || p.Nombre || p.name || p.Name,
+      sku: p.sku || p.Sku,
+      idCategoria: String(p.idCategoria || p.IdCategoria || p.categoryCen || p.CategoryCen || ""),
+      idUnidad: p.idUnidad || p.IdUnidad || p.unitCen || p.UnitCen ? String(p.idUnidad || p.IdUnidad || p.unitCen || p.UnitCen) : "",
+      precioVenta: String(p.precioVenta || p.PrecioVenta || p.salePrice || p.SalePrice || 0),
+      estacion: p.estacion || p.Estacion || "",
+      activo: p.activo !== undefined ? p.activo : (p.Activo !== undefined ? p.Activo : (p.status === "ACTIVE" || p.Status === "ACTIVE")),
+      agotado86: p.agotado86 !== undefined ? p.agotado86 : (p.Agotado86 !== undefined ? p.Agotado86 : (p.status === "OUT_OF_STOCK" || p.Status === "OUT_OF_STOCK")),
     });
     setError("");
   };
@@ -123,8 +124,10 @@ export default function ProductosPage() {
           className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent"
         >
           <option value="">Todas las categorías</option>
-          {categorias.map((c) => (
-            <option key={c.idCategoria} value={c.idCategoria}>{c.nombre}</option>
+          {categorias.map((c, idx) => (
+            <option key={c.idCategoria || c.IdCategoria || c.categoryCen || c.CategoryCen || `cat-filter-${idx}`} value={c.idCategoria || c.IdCategoria || c.categoryCen || c.CategoryCen}>
+              {c.nombre || c.Nombre || c.name || c.Name}
+            </option>
           ))}
         </select>
         <select
@@ -133,8 +136,10 @@ export default function ProductosPage() {
           className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent"
         >
           <option value="">Todas las unidades</option>
-          {unidades.map((u) => (
-            <option key={u.idUnidad} value={u.idUnidad}>{u.nombre}</option>
+          {unidades.map((u, idx) => (
+            <option key={u.idUnidad || u.IdUnidad || u.unitCen || u.UnitCen || `uni-filter-${idx}`} value={u.idUnidad || u.IdUnidad || u.unitCen || u.UnitCen}>
+              {u.nombre || u.Nombre || u.name || u.Name}
+            </option>
           ))}
         </select>
         <select
@@ -155,11 +160,22 @@ export default function ProductosPage() {
           <input value={form.precioVenta} type="number" step="0.01" min="0.01" onChange={(e) => setForm((p) => ({ ...p, precioVenta: e.target.value }))} placeholder="Precio venta" required className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent" />
           <select value={form.idCategoria} onChange={(e) => setForm((p) => ({ ...p, idCategoria: e.target.value }))} required className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent">
             <option value="">Categoría</option>
-            {categorias.map((c) => <option key={c.idCategoria} value={c.idCategoria}>{c.nombre}</option>)}
+            {categorias.map((c, idx) => (
+              <option key={c.idCategoria || c.IdCategoria || c.categoryCen || c.CategoryCen || `cat-form-${idx}`} value={c.idCategoria || c.IdCategoria || c.categoryCen || c.CategoryCen}>
+                {c.nombre || c.Nombre || c.name || c.Name}
+              </option>
+            ))}
           </select>
           <select value={form.idUnidad} onChange={(e) => setForm((p) => ({ ...p, idUnidad: e.target.value }))} required className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent">
             <option value="">Unidad (Obligatorio)</option>
-            {unidades.filter((u) => u.activo).map((u) => <option key={u.idUnidad} value={u.idUnidad}>{u.nombre}</option>)}
+            {unidades.filter((u) => {
+                const isActive = u.activo !== undefined ? u.activo : (u.Activo !== undefined ? u.Activo : (u.isActive !== undefined ? u.isActive : (u.IsActive !== undefined ? u.IsActive : true)));
+                return isActive;
+            }).map((u, idx) => (
+              <option key={u.idUnidad || u.IdUnidad || u.unitCen || u.UnitCen || `uni-form-${idx}`} value={u.idUnidad || u.IdUnidad || u.unitCen || u.UnitCen}>
+                {u.nombre || u.Nombre || u.name || u.Name}
+              </option>
+            ))}
           </select>
           <select value={form.estacion} onChange={(e) => setForm((p) => ({ ...p, estacion: e.target.value }))} className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent">
             <option value="">Estación (Ninguna)</option>
@@ -217,31 +233,36 @@ export default function ProductosPage() {
                 </tr>
               </thead>
               <tbody>
-                {productos.map((p) => (
-                  <tr key={p.idProducto} className="border-b border-gray-100 dark:border-gray-900">
-                    <td className="p-3">{p.sku}</td>
-                    <td className="p-3">{p.nombre}</td>
-                    <td className="p-3">
-                      <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                        {p.estacion || "N/A"}
-                      </span>
-                    </td>
-                    <td className="p-3">Bs {Number(p.precioVenta ?? 0).toFixed(2)}</td>
-                    <td className="p-3">{p.activo ? "Sí" : "No"}</td>
-                    <td className="p-3">{p.agotado86 ? "Sí" : "No"}</td>
-                    <td className="p-3 flex gap-2 flex-wrap">
-                      <button className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700" onClick={() => startEdit(p)}>
-                        Editar
-                      </button>
-                      <button className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700" onClick={() => cambiarEstado.mutate({ id: p.idProducto, activo: !p.activo })}>
-                        {p.activo ? "Desactivar" : "Activar"}
-                      </button>
-                      <button className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700" onClick={() => cambiarAgotado.mutate({ id: p.idProducto, agotado: !p.agotado86 })}>
-                        {p.agotado86 ? "Quitar" : "Marcar"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {productos.map((p, idx) => {
+                  const idProducto = p.idProducto || p.IdProducto || p.productCen || p.ProductCen || `prod-${idx}`;
+                  const activo = p.activo !== undefined ? p.activo : (p.Activo !== undefined ? p.Activo : (p.status === "ACTIVE" || p.Status === "ACTIVE" || p.status === "OUT_OF_STOCK" || p.Status === "OUT_OF_STOCK"));
+                  const agotado86 = p.agotado86 !== undefined ? p.agotado86 : (p.Agotado86 !== undefined ? p.Agotado86 : (p.status === "OUT_OF_STOCK" || p.Status === "OUT_OF_STOCK"));
+                  return (
+                    <tr key={idProducto} className="border-b border-gray-100 dark:border-gray-900">
+                      <td className="p-3">{p.sku || p.Sku}</td>
+                      <td className="p-3">{p.nombre || p.Nombre || p.name || p.Name}</td>
+                      <td className="p-3">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                          {p.estacion || p.Estacion || "N/A"}
+                        </span>
+                      </td>
+                      <td className="p-3">Bs {Number(p.precioVenta || p.PrecioVenta || p.salePrice || p.SalePrice || 0).toFixed(2)}</td>
+                      <td className="p-3">{activo ? "Sí" : "No"}</td>
+                      <td className="p-3">{agotado86 ? "Sí" : "No"}</td>
+                      <td className="p-3 flex gap-2 flex-wrap">
+                        <button className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700" onClick={() => startEdit(p)}>
+                          Editar
+                        </button>
+                        <button className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700" onClick={() => cambiarEstado.mutate({ id: idProducto, activo: !activo })}>
+                          {activo ? "Desactivar" : "Activar"}
+                        </button>
+                        <button className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700" onClick={() => cambiarAgotado.mutate({ id: idProducto, agotado: !agotado86 })}>
+                          {agotado86 ? "Quitar" : "Marcar"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

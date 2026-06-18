@@ -17,7 +17,13 @@ export default function UnidadesPage() {
     const actualizar = useActualizarUnidad();
     const cambiarEstado = useCambiarEstadoUnidad();
 
-    const sorted = useMemo(() => [...unidades].sort((a, b) => a.nombre.localeCompare(b.nombre)), [unidades]);
+    const sorted = useMemo(() => {
+        return [...unidades].sort((a, b) => {
+            const nombreA = a.nombre || a.Nombre || a.name || a.Name || "";
+            const nombreB = b.nombre || b.Nombre || b.name || b.Name || "";
+            return nombreA.localeCompare(nombreB);
+        });
+    }, [unidades]);
 
     const onSubmit = async (e) => {
         e.preventDefault();
@@ -36,8 +42,13 @@ export default function UnidadesPage() {
     };
 
     const startEdit = (u) => {
-        setEditId(u.idUnidad);
-        setForm({ nombre: u.nombre, abreviatura: u.abreviatura, activo: u.activo });
+        const idUnidad = u.idUnidad || u.IdUnidad || u.unitCen || u.UnitCen;
+        setEditId(idUnidad);
+        setForm({ 
+            nombre: u.nombre || u.Nombre || u.name || u.Name || "", 
+            abreviatura: u.abreviatura || u.Abreviatura || u.abbreviation || u.Abbreviation || "", 
+            activo: u.activo !== undefined ? u.activo : (u.Activo !== undefined ? u.Activo : (u.isActive !== undefined ? u.isActive : (u.IsActive !== undefined ? u.IsActive : true)))
+        });
         setError("");
     };
 
@@ -117,24 +128,31 @@ export default function UnidadesPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {sorted.map((u) => (
-                                    <tr key={u.idUnidad} className="border-b border-gray-100 dark:border-gray-900">
-                                        <td className="p-3">{u.nombre}</td>
-                                        <td className="p-3">{u.abreviatura}</td>
-                                        <td className="p-3">{u.activo ? "Activa" : "Inactiva"}</td>
-                                        <td className="p-3 flex gap-2">
-                                            <button className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700" onClick={() => startEdit(u)}>
-                                                Editar
-                                            </button>
-                                            <button
-                                                className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700"
-                                                onClick={() => cambiarEstado.mutate({ id: u.idUnidad, activo: !u.activo })}
-                                            >
-                                                {u.activo ? "Desactivar" : "Activar"}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {sorted.map((u, idx) => {
+                                    const idUnidad = u.idUnidad || u.IdUnidad || u.unitCen || u.UnitCen || `uni-${idx}`;
+                                    const nombreUnidad = u.nombre || u.Nombre || u.name || u.Name || "—";
+                                    const abreviaturaUnidad = u.abreviatura || u.Abreviatura || u.abbreviation || u.Abbreviation || "—";
+                                    const activoUnidad = u.activo !== undefined ? u.activo : (u.Activo !== undefined ? u.Activo : (u.isActive !== undefined ? u.isActive : (u.IsActive !== undefined ? u.IsActive : true)));
+
+                                    return (
+                                        <tr key={idUnidad} className="border-b border-gray-100 dark:border-gray-900">
+                                            <td className="p-3">{nombreUnidad}</td>
+                                            <td className="p-3">{abreviaturaUnidad}</td>
+                                            <td className="p-3">{activoUnidad ? "Activa" : "Inactiva"}</td>
+                                            <td className="p-3 flex gap-2">
+                                                <button className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700" onClick={() => startEdit(u)}>
+                                                    Editar
+                                                </button>
+                                                <button
+                                                    className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700"
+                                                    onClick={() => cambiarEstado.mutate({ id: idUnidad, activo: !activoUnidad })}
+                                                >
+                                                    {activoUnidad ? "Desactivar" : "Activar"}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

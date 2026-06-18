@@ -13,8 +13,7 @@ apiInventory.interceptors.request.use((config) => {
     if (typeof window !== "undefined") {
         const empresaId = localStorage.getItem("empresaId") || localStorage.getItem("empresaid");
         if (empresaId) {
-            const cleanId = empresaId.toString().replace(/^emp-/i, "");
-            config.headers["x-empresa-id"] = cleanId;
+            config.headers["x-empresa-id"] = empresaId;
         }
     }
     return config;

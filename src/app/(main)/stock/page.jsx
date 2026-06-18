@@ -37,8 +37,8 @@ export default function StockPage() {
       return;
     }
 
-    const idProducto = Number(stockInicial.idProducto);
-    const idAlmacen = Number(stockInicial.idAlmacen);
+    const idProducto = stockInicial.idProducto;
+    const idAlmacen = stockInicial.idAlmacen;
     const cantidad = Number(stockInicial.cantidad);
 
     if (!idProducto || !idAlmacen || !Number.isFinite(cantidad) || cantidad < 0) {
@@ -63,8 +63,8 @@ export default function StockPage() {
     setError("");
     try {
       await ajustar.mutateAsync({
-        idProducto: Number(ajuste.idProducto),
-        idAlmacen: Number(ajuste.idAlmacen),
+        idProducto: ajuste.idProducto,
+        idAlmacen: ajuste.idAlmacen,
         nuevaCantidad: Number(ajuste.nuevaCantidad),
         motivo: ajuste.motivo,
       });
@@ -86,11 +86,19 @@ export default function StockPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <select value={stockInicial.idProducto} onChange={(e) => setStockInicial((p) => ({ ...p, idProducto: e.target.value }))} required className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent">
               <option value="">Producto</option>
-              {productos.map((p) => <option key={p.idProducto} value={p.idProducto}>{p.nombre}</option>)}
+              {productos.map((p, idx) => (
+                <option key={p.idProducto || p.IdProducto || p.productCen || p.ProductCen || `prod-init-${idx}`} value={p.idProducto || p.IdProducto || p.productCen || p.ProductCen}>
+                  {p.nombre || p.Nombre || p.name || p.Name}
+                </option>
+              ))}
             </select>
             <select value={stockInicial.idAlmacen} onChange={(e) => setStockInicial((p) => ({ ...p, idAlmacen: e.target.value }))} required className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent">
               <option value="">Almacén</option>
-              {almacenes.map((a) => <option key={a.idAlmacen} value={a.idAlmacen}>{a.nombre}</option>)}
+              {almacenes.map((a, idx) => (
+                <option key={a.idAlmacen || a.IdAlmacen || a.warehouseCen || a.WarehouseCen || `alm-init-${idx}`} value={a.idAlmacen || a.IdAlmacen || a.warehouseCen || a.WarehouseCen}>
+                  {a.nombre || a.Nombre || a.name || a.Name}
+                </option>
+              ))}
             </select>
             <input type="number" min="0" value={stockInicial.cantidad} onChange={(e) => setStockInicial((p) => ({ ...p, cantidad: e.target.value }))} required placeholder="Cantidad" className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent" />
           </div>
@@ -108,11 +116,19 @@ export default function StockPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <select value={ajuste.idProducto} onChange={(e) => setAjuste((p) => ({ ...p, idProducto: e.target.value }))} required className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent">
               <option value="">Producto</option>
-              {productos.map((p) => <option key={p.idProducto} value={p.idProducto}>{p.nombre}</option>)}
+              {productos.map((p, idx) => (
+                <option key={p.idProducto || p.IdProducto || p.productCen || p.ProductCen || `prod-ajuste-${idx}`} value={p.idProducto || p.IdProducto || p.productCen || p.ProductCen}>
+                  {p.nombre || p.Nombre || p.name || p.Name}
+                </option>
+              ))}
             </select>
             <select value={ajuste.idAlmacen} onChange={(e) => setAjuste((p) => ({ ...p, idAlmacen: e.target.value }))} required className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent">
               <option value="">Almacén</option>
-              {almacenes.map((a) => <option key={a.idAlmacen} value={a.idAlmacen}>{a.nombre}</option>)}
+              {almacenes.map((a, idx) => (
+                <option key={a.idAlmacen || a.IdAlmacen || a.warehouseCen || a.WarehouseCen || `alm-ajuste-${idx}`} value={a.idAlmacen || a.IdAlmacen || a.warehouseCen || a.WarehouseCen}>
+                  {a.nombre || a.Nombre || a.name || a.Name}
+                </option>
+              ))}
             </select>
             <input type="number" min="0" value={ajuste.nuevaCantidad} onChange={(e) => setAjuste((p) => ({ ...p, nuevaCantidad: e.target.value }))} required placeholder="Nueva cantidad" className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent" />
             <input value={ajuste.motivo} onChange={(e) => setAjuste((p) => ({ ...p, motivo: e.target.value }))} required placeholder="Motivo" className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent" />
@@ -151,14 +167,17 @@ export default function StockPage() {
                 </tr>
               </thead>
               <tbody>
-                {stock.map((s) => (
-                  <tr key={s.idStock} className="border-b border-gray-100 dark:border-gray-900">
-                    <td className="p-3">{s.productoNombre}</td>
-                    <td className="p-3">{s.productoSku}</td>
-                    <td className="p-3">{s.almacenNombre}</td>
-                    <td className="p-3">{s.cantidad}</td>
-                  </tr>
-                ))}
+                {stock.map((s, idx) => {
+                   const idStock = s.idStock || s.IdStock || `stock-${idx}`;
+                   return (
+                    <tr key={idStock} className="border-b border-gray-100 dark:border-gray-900">
+                      <td className="p-3">{s.productoNombre || s.ProductoNombre || s.productName || s.ProductName}</td>
+                      <td className="p-3">{s.productoSku || s.ProductoSku}</td>
+                      <td className="p-3">{s.almacenNombre || s.AlmacenNombre || s.warehouseName || s.WarehouseName}</td>
+                      <td className="p-3">{s.cantidad !== undefined ? s.cantidad : (s.Cantidad !== undefined ? s.Cantidad : (s.availableQuantity !== undefined ? s.availableQuantity : s.AvailableQuantity))}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

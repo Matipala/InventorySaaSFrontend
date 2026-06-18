@@ -7,7 +7,7 @@ export function useCategorias() {
 
     return useQuery({
         queryKey: ["categorias", empresaId],
-        queryFn: () => apiInventory.get("/api/Categorias").then((r) => r.data),
+        queryFn: () => apiInventory.get(`/api/categorias`).then((r) => r.data),
         enabled: !!empresaId,
     });
 }
@@ -17,7 +17,7 @@ export function useCrearCategoria() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: (data) => apiInventory.post("/api/Categorias", data).then((r) => r.data),
+        mutationFn: (data) => apiInventory.post(`/api/categorias`, data).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["categorias", empresaId] });
         },
@@ -29,7 +29,7 @@ export function useActualizarCategoria() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: ({ id, data }) => apiInventory.put(`/api/Categorias/${id}`, data).then((r) => r.data),
+        mutationFn: ({ id, data }) => apiInventory.put(`/api/categorias/${id}`, data).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["categorias", empresaId] });
         },

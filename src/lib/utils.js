@@ -55,3 +55,16 @@ export const TIPO_MOVIMIENTO_COLORS = {
     AJUSTE_POSITIVO: "text-emerald-700 bg-emerald-100",
     AJUSTE_NEGATIVO: "text-orange-700 bg-orange-100",
 };
+
+/**
+ * Format a number as currency in CLP.
+ */
+export function formatCurrency(amount) {
+    if (amount === undefined || amount === null) return "—";
+    return new Intl.NumberFormat("es-CL", {
+        style: "currency",
+        currency: "CLP",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(amount);
+}

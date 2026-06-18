@@ -4,16 +4,16 @@ import { useEmpresa } from "@/context/EmpresaContext";
 
 export function useProductos(filters = {}) {
     const { empresaId } = useEmpresa();
-
-    const params = new URLSearchParams();
-    if (filters.q) params.set("q", filters.q);
-    if (filters.idCategoria) params.set("idCategoria", String(filters.idCategoria));
-    if (filters.idUnidad) params.set("idUnidad", String(filters.idUnidad));
-    if (typeof filters.activo === "boolean") params.set("activo", String(filters.activo));
+    const { q = "", idCategoria = "", idUnidad = "", activo = "" } = filters;
 
     return useQuery({
-        queryKey: ["productos", empresaId, filters],
-        queryFn: () => apiInventory.get(`/api/Productos?${params.toString()}`).then((r) => r.data),
+        queryKey: ["productos", empresaId, q, idCategoria, idUnidad, activo],
+        queryFn: () =>
+            apiInventory
+                .get(`/api/productos`, {
+                    params: { q, idCategoria, idUnidad, activo },
+                })
+                .then((r) => r.data),
         enabled: !!empresaId,
     });
 }
@@ -23,10 +23,9 @@ export function useCrearProducto() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: (data) => apiInventory.post("/api/Productos", data).then((r) => r.data),
+        mutationFn: (data) => apiInventory.post(`/api/productos`, data).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["productos", empresaId] });
-            queryClient.invalidateQueries({ queryKey: ["stock", empresaId] });
         },
     });
 }
@@ -36,19 +35,20 @@ export function useActualizarProducto() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: ({ id, data }) => apiInventory.put(`/api/Productos/${id}`, data).then((r) => r.data),
+        mutationFn: ({ id, data }) =>
+            apiInventory.put(`/api/productos/${id}`, data).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["productos", empresaId] });
         },
     });
 }
 
-export function useCambiarEstadoProducto() {
+export function useEliminarProducto() {
     const queryClient = useQueryClient();
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: ({ id, activo }) => apiInventory.patch(`/api/Productos/${id}/estado`, activo).then((r) => r.data),
+        mutationFn: (id) => apiInventory.patch(`/api/productos/${id}/estado`, false).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["productos", empresaId] });
         },
@@ -60,7 +60,19 @@ export function useCambiarAgotadoProducto() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: ({ id, agotado }) => apiInventory.patch(`/api/Productos/${id}/agotado`, agotado).then((r) => r.data),
+        mutationFn: ({ id, agotado }) => apiInventory.patch(`/api/productos/${id}/agotado`, agotado).then((r) => r.data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["productos", empresaId] });
+        },
+    });
+}
+
+export function useCambiarEstadoProducto() {
+    const queryClient = useQueryClient();
+    const { empresaId } = useEmpresa();
+
+    return useMutation({
+        mutationFn: ({ id, activo }) => apiInventory.patch(`/api/productos/${id}/estado`, activo).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["productos", empresaId] });
         },

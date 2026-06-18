@@ -2,8 +2,7 @@
 "use client";
 import { useState } from "react";
 import { Warehouse } from "lucide-react";
-import apiInventory from "@/lib/apiInventory";
-import { useAlmacenes } from "@/hooks/useAlmacenes";
+import { useAlmacenes, useCrearAlmacen } from "@/hooks/useAlmacenes";
 import { AlertError } from "@/components/ui/AlertError";
 
 export default function AlmacenesPage() {
@@ -11,7 +10,8 @@ export default function AlmacenesPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const { data: almacenes, refetch } = useAlmacenes();
+  const { data: almacenes = [] } = useAlmacenes();
+  const crearAlmacen = useCrearAlmacen();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,10 +19,9 @@ export default function AlmacenesPage() {
     setSuccess("");
     setLoading(true);
     try {
-      await apiInventory.post("/api/Almacenes", { nombre });
+      await crearAlmacen.mutateAsync({ nombre });
       setSuccess("Almacén creado correctamente");
       setNombre("");
-      refetch();
     } catch (err) {
       setError(err.response?.data?.mensaje || err.response?.data?.title || err.message || "Error al crear almacén");
     } finally {
@@ -41,7 +40,7 @@ export default function AlmacenesPage() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-2 w-full max-w-xs mt-4">
           <input
             type="text"
-            className="border rounded px-3 py-2 focus:outline-none focus:ring"
+            className="border rounded px-3 py-2 focus:outline-none focus:ring bg-transparent"
             placeholder="Nombre del almacén"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
@@ -69,12 +68,16 @@ export default function AlmacenesPage() {
               </tr>
             </thead>
             <tbody>
-              {almacenes?.length > 0 ? (
-                almacenes.map((a) => (
-                  <tr key={a.idAlmacen} className="border-b border-gray-100 dark:border-gray-900">
-                    <td className="p-3">{a.nombre}</td>
-                  </tr>
-                ))
+              {almacenes.length > 0 ? (
+                almacenes.map((a, idx) => {
+                  const idAlmacen = a.idAlmacen || a.IdAlmacen || a.warehouseCen || a.WarehouseCen || `alm-${idx}`;
+                  const nombreAlmacen = a.nombre || a.Nombre || a.name || a.Name || "Sin nombre";
+                  return (
+                    <tr key={idAlmacen} className="border-b border-gray-100 dark:border-gray-900">
+                      <td className="p-3">{nombreAlmacen}</td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td className="p-3 text-sm text-gray-500">No hay almacenes registrados.</td>

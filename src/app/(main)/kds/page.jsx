@@ -1,59 +1,101 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import apiVentas from "@/lib/apiVentas";
-import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import { HubConnectionBuilder, LogLevel, HttpTransportType, HubConnectionState } from "@microsoft/signalr";
 import { Coffee, Utensils, Clock, User, ClipboardList } from "lucide-react";
 import { useProductos } from "@/hooks/useProductos";
+import { useEmpresa } from "@/context/EmpresaContext";
+
+// Singleton global para la conexión de SignalR
+let globalConnection = null;
 
 export default function KdsPage() {
+    const { empresaId } = useEmpresa();
     const [items, setItems] = useState([]);
-    const [estacion, setEstacion] = useState("COCINA"); // Default
+    const [estacion, setEstacion] = useState("COCINA"); 
     const [loading, setLoading] = useState(true);
     const { data: productos = [] } = useProductos();
 
-    const fetchKds = async () => {
+    // Referencia para evitar que los callbacks usen estados viejos
+    const fetchKdsRef = useRef(null);
+
+    const fetchKds = useCallback(async () => {
+        if (!empresaId) return;
         try {
-            const r = await apiVentas.get(`/api/ventas/kds/${estacion}`);
+            const r = await apiVentas.get(`/api/sales/companies/${empresaId}/kds/${estacion}`);
             setItems(r.data);
         } catch (e) {
             console.error("Error fetching KDS", e);
         } finally {
             setLoading(false);
         }
-    };
+    }, [empresaId, estacion]);
 
+    // Actualizamos la referencia cada vez que fetchKds cambie
+    useEffect(() => {
+        fetchKdsRef.current = fetchKds;
+    }, [fetchKds]);
+
+    // Efecto 1: Carga inicial de datos
     useEffect(() => {
         fetchKds();
+    }, [fetchKds]);
 
-        const connection = new HubConnectionBuilder()
-            .withUrl(`${process.env.NEXT_PUBLIC_VENTAS_API_URL}/api/ventas/hubs/kds`)
-            .configureLogging(LogLevel.Warning)
-            .withAutomaticReconnect()
-            .build();
+    // Efecto 2: Gestión de SignalR (Singleton)
+    useEffect(() => {
+        if (!empresaId) return;
 
-        connection.on("UpdateKds", () => {
-            fetchKds();
-        });
+        // Si ya hay una conexión y está activa, solo nos aseguramos de estar suscritos
+        if (globalConnection && globalConnection.state === HubConnectionState.Connected) {
+            globalConnection.invoke("SubscribeToEmpresa", empresaId).catch(console.error);
+        } else if (!globalConnection || globalConnection.state === HubConnectionState.Disconnected) {
+            
+            let baseUrl = process.env.NEXT_PUBLIC_VENTAS_API_URL || "";
+            if (baseUrl.endsWith("/")) baseUrl = baseUrl.slice(0, -1);
+            const hubUrl = `${baseUrl}/api/ventas/hubs/kds`;
 
-        connection.start()
-            .then(() => console.log("Conectado a KDS SignalR en tiempo real"))
-            .catch(err => console.error("Error al conectar KDS SignalR:", err));
+            globalConnection = new HubConnectionBuilder()
+                .withUrl(hubUrl, {
+                    transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling
+                })
+                .withAutomaticReconnect()
+                .configureLogging(LogLevel.Error) // Solo errores para limpiar la consola
+                .build();
 
-        return () => {
-            connection.stop();
-        };
-    }, [estacion]);
+            globalConnection.on("UpdateKds", () => {
+                console.log("KDS SignalR: Señal recibida, recargando...");
+                if (fetchKdsRef.current) fetchKdsRef.current();
+            });
+
+            const startConnection = async () => {
+                try {
+                    await globalConnection.start();
+                    console.log("KDS SignalR: Conexión establecida");
+                    await globalConnection.invoke("SubscribeToEmpresa", empresaId);
+                } catch (err) {
+                    // Ignoramos el error de negociación abortada ya que el reconector lo manejará
+                    if (err.name !== 'AbortError') {
+                        console.error("Error al iniciar SignalR:", err);
+                    }
+                }
+            };
+
+            startConnection();
+        }
+
+        // NO cerramos la conexión al desmontar para evitar el error de negociación.
+        // SignalR se mantendrá vivo mientras el usuario navegue en la app.
+    }, [empresaId]);
 
     // Filtrar ítems por la estación del producto
     const itemsFiltrados = items.filter(it => {
-        const prod = productos.find(p => p.idProducto === it.idProducto);
-        const prodEstacion = (prod?.estacion || "COCINA").toUpperCase();
+        const prod = productos.find(p => (p.idProducto || p.IdProducto) === it.idProducto);
+        const prodEstacion = (prod?.estacion || prod?.Estacion || "COCINA").toUpperCase();
         return prodEstacion === estacion.toUpperCase();
     });
 
     const handleCambiarEstado = async (id, nuevoEstado) => {
-        // Actualización Optimista
         const itemsPrevios = [...items];
         setItems(actuales =>
             actuales.map(item =>
@@ -62,11 +104,10 @@ export default function KdsPage() {
         );
 
         try {
-            await apiVentas.patch(`/api/ventas/kds/items/${id}/estado`, { nuevoEstado });
-            // SignalR se encargará de notificar a los demás y a nosotros mismos para sincronizar
+            await apiVentas.patch(`/api/sales/companies/${empresaId}/kds/items/${id}/status`, { nuevoEstado });
         } catch (e) {
             alert("Error al actualizar estado");
-            setItems(itemsPrevios); // Revertir en caso de error
+            setItems(itemsPrevios);
         }
     };
 
@@ -106,18 +147,18 @@ export default function KdsPage() {
                     >
                         <div className="flex justify-between items-start">
                             <span className="bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 text-xs font-black px-2 py-0.5 rounded">
-                                TICKET #{it.numero}
+                                TICKET #{it.numero || it.Numero}
                             </span>
                             <span className="text-xs text-gray-400 flex items-center gap-1">
-                                <Clock size={12} /> {new Date(it.fechaCreacion).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                <Clock size={12} /> {new Date(it.fechaCreacion || it.FechaCreacion).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                         </div>
 
                         <div className="flex-1 mt-1">
                             <p className="font-bold text-lg leading-tight uppercase">
-                                {productos.find(p => p.idProducto === it.idProducto)?.nombre || `Producto ${it.idProducto}`}
+                                {productos.find(p => (p.idProducto || p.IdProducto) === it.idProducto)?.nombre || `Producto ${it.idProducto}`}
                             </p>
-                            <p className="text-2xl font-black text-purple-600 mt-1">x{it.cantidad}</p>
+                            <p className="text-2xl font-black text-purple-600 mt-1">x{it.cantidad || it.Cantidad}</p>
 
                             <div className="mt-2">
                                 <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-full ${it.estadoComanda === "PREPARACION" ? "bg-orange-100 text-orange-700" :
@@ -128,10 +169,10 @@ export default function KdsPage() {
                                 </span>
                             </div>
 
-                            {it.nota && (
+                            {(it.nota || it.Nota) && (
                                 <div className="mt-3 p-2 bg-violet-50 dark:bg-violet-900/20 border-l-2 border-l-violet-400 rounded-sm">
                                     <p className="text-sm font-semibold text-black dark:text-white">NOTA:</p>
-                                    <p className="text-sm text-black dark:text-white font-bold">{it.nota}</p>
+                                    <p className="text-sm text-black dark:text-white font-bold">{it.nota || it.Nota}</p>
                                 </div>
                             )}
                         </div>
@@ -161,7 +202,7 @@ export default function KdsPage() {
                         </div>
 
                         <div className="border-t border-gray-100 dark:border-gray-800 pt-3 flex items-center gap-2 text-xs text-gray-500">
-                            <User size={14} /> Mesero: <span className="font-bold text-gray-700 dark:text-gray-300">{it.mesero}</span>
+                            <User size={14} /> Mesero: <span className="font-bold text-gray-700 dark:text-gray-300">{it.mesero || it.Mesero}</span>
                         </div>
                     </div>
                 ))}
