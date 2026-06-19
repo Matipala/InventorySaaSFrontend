@@ -7,7 +7,7 @@ export function useCompras() {
 
     return useQuery({
         queryKey: ["compras", empresaId],
-        queryFn: () => apiCompras.get("/api/purchases/orders").then((r) => r.data),
+        queryFn: () => apiCompras.get(`/api/purchases/companies/${empresaId}/orders`).then((r) => r.data),
         enabled: !!empresaId,
     });
 }
@@ -17,7 +17,7 @@ export function useCompra(id) {
 
     return useQuery({
         queryKey: ["compra", empresaId, id],
-        queryFn: () => apiCompras.get(`/api/purchases/orders/${id}`).then((r) => r.data),
+        queryFn: () => apiCompras.get(`/api/purchases/companies/${empresaId}/orders/${id}`).then((r) => r.data),
         enabled: !!empresaId && !!id,
     });
 }
@@ -27,7 +27,7 @@ export function useCrearCompra() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: (data) => apiCompras.post("/api/purchases/orders", data).then((r) => r.data),
+        mutationFn: (data) => apiCompras.post(`/api/purchases/companies/${empresaId}/orders`, data).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["compras", empresaId] });
         },
@@ -39,7 +39,7 @@ export function useConfirmarCompra() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: (id) => apiCompras.post(`/api/purchases/orders/${id}/confirm`).then((r) => r.data),
+        mutationFn: (id) => apiCompras.post(`/api/purchases/companies/${empresaId}/orders/${id}/confirm`).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["compras", empresaId] });
             queryClient.invalidateQueries({ queryKey: ["compra", empresaId] });

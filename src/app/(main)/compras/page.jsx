@@ -60,10 +60,10 @@ export default function ComprasPage() {
         }
 
         const parsedItems = items.map((item) => ({
-            productId: Number(item.productId),
-            almacenId: Number(item.almacenId),
+            productId: item.productId,
+            almacenId: item.almacenId,
             quantity: Number(item.quantity),
-            empresaId: Number(empresaId),
+            empresaId: empresaId,
         }));
 
         if (parsedItems.some((i) => !i.productId || !i.almacenId || !i.quantity)) {
@@ -92,16 +92,15 @@ export default function ComprasPage() {
         }
     };
 
-    const onConfirm = (id) => {
+    const onConfirm = async (id) => {
         setToast(null);
-        confirmarCompra.mutate(id, {
-            onSuccess: () => {
-                setToast({ type: "success", msg: "Compra confirmada." });
-            },
-            onError: (err) => {
-                setToast({ type: "error", msg: err.response?.data?.mensaje || err.response?.data?.title || err.message || "Ocurrió un error inesperado." });
-            },
-        });
+        try {
+            await confirmarCompra.mutateAsync(id);
+            setToast({ type: "success", msg: "Compra confirmada y stock actualizado." });
+            setTimeout(() => setToast(null), 3000);
+        } catch (err) {
+            setToast({ type: "error", msg: err.response?.data?.mensaje || err.message || "Ocurrió un error inesperado." });
+        }
     };
 
     return (

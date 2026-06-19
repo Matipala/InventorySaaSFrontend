@@ -14,7 +14,13 @@ export default function CategoriasPage() {
   const crear = useCrearCategoria();
   const actualizar = useActualizarCategoria();
 
-  const sorted = useMemo(() => [...categorias].sort((a, b) => a.nombre.localeCompare(b.nombre)), [categorias]);
+  const sorted = useMemo(() => {
+    return [...categorias].sort((a, b) => {
+      const nombreA = a.nombre || a.Nombre || a.name || a.Name || "";
+      const nombreB = b.nombre || b.Nombre || b.name || b.Name || "";
+      return nombreA.localeCompare(nombreB);
+    });
+  }, [categorias]);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -87,22 +93,27 @@ export default function CategoriasPage() {
                 </tr>
               </thead>
               <tbody>
-                {sorted.map((categoria) => (
-                  <tr key={categoria.idCategoria} className="border-b border-gray-100 dark:border-gray-900">
-                    <td className="p-3">{categoria.nombre}</td>
-                    <td className="p-3">
-                      <button
-                        className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700"
-                        onClick={() => {
-                          setEditId(categoria.idCategoria);
-                          setNombre(categoria.nombre);
-                        }}
-                      >
-                        Editar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {sorted.map((categoria, idx) => {
+                  const idCategoria = categoria.idCategoria || categoria.IdCategoria || categoria.categoryCen || categoria.CategoryCen || `cat-${idx}`;
+                  const nombreCategoria = categoria.nombre || categoria.Nombre || categoria.name || categoria.Name || "Sin nombre";
+                  
+                  return (
+                    <tr key={idCategoria} className="border-b border-gray-100 dark:border-gray-900">
+                      <td className="p-3">{nombreCategoria}</td>
+                      <td className="p-3">
+                        <button
+                          className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700"
+                          onClick={() => {
+                            setEditId(idCategoria);
+                            setNombre(nombreCategoria);
+                          }}
+                        >
+                          Editar
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

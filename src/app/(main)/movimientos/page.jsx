@@ -64,12 +64,12 @@ function EntradaForm({ onClose }) {
     }
 
     const payload = {
-      idProducto: Number(form.idProducto),
-      idAlmacen: Number(form.idAlmacen),
+      idProducto: form.idProducto,
+      idAlmacen: form.idAlmacen,
       cantidad: Number(form.cantidad),
       tipo: form.tipo,
       ...(form.tipo === "TRANSFERENCIA" && {
-        idAlmacenDestino: Number(form.idAlmacenDestino),
+        idAlmacenDestino: form.idAlmacenDestino,
       }),
     };
 

@@ -7,7 +7,7 @@ export function useCrearCuentaTicket() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: (data) => apiVentas.post("/api/ventas/cuentas", data).then((r) => r.data),
+        mutationFn: (data) => apiVentas.post(`/api/sales/companies/${empresaId}/tickets`, data).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["cuentas-tickets-abiertas", empresaId] });
         },
@@ -21,11 +21,11 @@ export function useAgregarItemCuentaTicket(idCuentaTicket) {
     return useMutation({
         mutationFn: (variables) => {
             const finalId = variables?.idCuentaTicket || idCuentaTicket;
-            return apiVentas.post(`/api/ventas/cuentas/${finalId}/items`, variables).then((r) => r.data);
+            return apiVentas.post(`/api/sales/companies/${empresaId}/tickets/${finalId}/items`, variables).then((r) => r.data);
         },
         onSuccess: (data, variables) => {
             const finalId = variables?.idCuentaTicket || idCuentaTicket;
-            queryClient.invalidateQueries({ queryKey: ["cuenta-ticket", Number(finalId), empresaId] });
+            queryClient.invalidateQueries({ queryKey: ["cuenta-ticket", finalId, empresaId] });
             queryClient.invalidateQueries({ queryKey: ["cuentas-tickets-abiertas", empresaId] });
         },
     });
@@ -38,14 +38,11 @@ export function usePagarCuentaTicket(idCuentaTicket) {
     return useMutation({
         mutationFn: (variables) => {
             const finalId = variables?.idCuentaTicket || idCuentaTicket;
-            return apiVentas.post(`/api/ventas/cuentas/${finalId}/pagar`, variables).then((r) => r.data).catch(err => {
-                console.error("Mutation function error (Pagar):", err);
-                throw err;
-            });
+            return apiVentas.post(`/api/sales/companies/${empresaId}/tickets/${finalId}/payment`, variables).then((r) => r.data);
         },
         onSuccess: (data, variables) => {
             const finalId = variables?.idCuentaTicket || idCuentaTicket;
-            queryClient.invalidateQueries({ queryKey: ["cuenta-ticket", Number(finalId), empresaId] });
+            queryClient.invalidateQueries({ queryKey: ["cuenta-ticket", finalId, empresaId] });
             queryClient.invalidateQueries({ queryKey: ["cuentas-tickets-abiertas", empresaId] });
         },
     });
@@ -55,7 +52,7 @@ export function useCuentaTicketById(idCuentaTicket) {
     const { empresaId } = useEmpresa();
     return useQuery({
         queryKey: ["cuenta-ticket", idCuentaTicket, empresaId],
-        queryFn: () => apiVentas.get(`/api/ventas/cuentas/${idCuentaTicket}`).then((r) => r.data),
+        queryFn: () => apiVentas.get(`/api/sales/companies/${empresaId}/tickets/${idCuentaTicket}`).then((r) => r.data),
         enabled: !!empresaId && !!idCuentaTicket,
     });
 }
@@ -64,7 +61,7 @@ export function useCuentasAbiertas() {
     const { empresaId } = useEmpresa();
     return useQuery({
         queryKey: ["cuentas-tickets-abiertas", empresaId],
-        queryFn: () => apiVentas.get("/api/ventas/cuentas/abiertas").then((r) => r.data),
+        queryFn: () => apiVentas.get(`/api/sales/companies/${empresaId}/tickets`).then((r) => r.data),
         enabled: !!empresaId,
     });
 }
@@ -74,10 +71,10 @@ export function useEnviarComanda(idCuentaTicket) {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: (overrideId) => apiVentas.post(`/api/ventas/cuentas/${Number(overrideId || idCuentaTicket)}/comanda`).then((r) => r.data),
+        mutationFn: (overrideId) => apiVentas.post(`/api/sales/companies/${empresaId}/tickets/${overrideId || idCuentaTicket}/send`).then((r) => r.data),
         onSuccess: (data, variables) => {
             const finalId = variables || idCuentaTicket;
-            queryClient.invalidateQueries({ queryKey: ["cuenta-ticket", Number(finalId), empresaId] });
+            queryClient.invalidateQueries({ queryKey: ["cuenta-ticket", finalId, empresaId] });
             queryClient.invalidateQueries({ queryKey: ["cuentas-tickets-abiertas", empresaId] });
         },
     });
@@ -88,7 +85,7 @@ export function useActualizarMesero(idCuentaTicket) {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: (nuevoMesero) => apiVentas.patch(`/api/ventas/cuentas/${idCuentaTicket}/mesero`, { nuevoMesero }).then((r) => r.data),
+        mutationFn: (nuevoMesero) => apiVentas.patch(`/api/sales/companies/${empresaId}/tickets/${idCuentaTicket}/waiter`, { nuevoMesero }).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["cuenta-ticket", idCuentaTicket, empresaId] });
             queryClient.invalidateQueries({ queryKey: ["cuentas-tickets-abiertas", empresaId] });
@@ -102,11 +99,11 @@ export function useCancelarCuentaTicket(idCuentaTicket) {
 
     return useMutation({
         mutationFn: (overrideId) => {
-            const finalId = Number(overrideId || idCuentaTicket);
-            return apiVentas.post(`/api/ventas/cuentas/${finalId}/cancelar`).then((r) => r.data);
+            const finalId = overrideId || idCuentaTicket;
+            return apiVentas.post(`/api/sales/companies/${empresaId}/tickets/${finalId}/cancel`).then((r) => r.data);
         },
         onSuccess: (data, variables) => {
-            const finalId = Number(variables || idCuentaTicket);
+            const finalId = variables || idCuentaTicket;
             queryClient.invalidateQueries({ queryKey: ["cuenta-ticket", finalId, empresaId] });
             queryClient.invalidateQueries({ queryKey: ["cuentas-tickets-abiertas", empresaId] });
         },
@@ -118,10 +115,10 @@ export function useReenviarComanda(idCuentaTicket) {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: (overrideId) => apiVentas.post(`/api/ventas/cuentas/${Number(overrideId || idCuentaTicket)}/reenviar-comanda`).then((r) => r.data),
+        mutationFn: (overrideId) => apiVentas.post(`/api/sales/companies/${empresaId}/tickets/${overrideId || idCuentaTicket}/resend`).then((r) => r.data),
         onSuccess: (data, variables) => {
             const finalId = variables || idCuentaTicket;
-            queryClient.invalidateQueries({ queryKey: ["cuenta-ticket", Number(finalId), empresaId] });
+            queryClient.invalidateQueries({ queryKey: ["cuenta-ticket", finalId, empresaId] });
             queryClient.invalidateQueries({ queryKey: ["cuentas-tickets-abiertas", empresaId] });
         },
     });

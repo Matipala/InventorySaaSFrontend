@@ -6,15 +6,15 @@ export function useMovimientos(filters = {}) {
     const { empresaId } = useEmpresa();
 
     const params = new URLSearchParams();
-    if (filters.idProducto) params.set("idProducto", filters.idProducto);
-    if (filters.idAlmacen) params.set("idAlmacen", filters.idAlmacen);
-    if (filters.tipo) params.set("tipo", filters.tipo);
+    if (filters.idProducto) params.set("productCen", filters.idProducto);
+    if (filters.idAlmacen) params.set("warehouseCen", filters.idAlmacen);
+    if (filters.tipo) params.set("documentType", filters.tipo);
 
     return useQuery({
         queryKey: ["movimientos", empresaId, filters],
         queryFn: () =>
             apiInventory
-                .get(`/api/Movimientos?${params.toString()}`)
+                .get(`/api/inventory/companies/${empresaId}/documents?${params.toString()}`)
                 .then((r) => r.data),
         enabled: !!empresaId,
     });
@@ -25,13 +25,22 @@ export function useCrearMovimiento() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: (data) =>
-            apiInventory.post("/api/Movimientos", data).then((r) => r.data),
+        mutationFn: (data) => {
+            const contractData = {
+                DocumentType: data.tipo === "ENTRADA" ? "ENTRY" : "EXIT",
+                WarehouseCen: String(data.idAlmacen),
+                Reason: data.motivo || "Manual Adjustment",
+                Lines: [{
+                    ProductCen: String(data.idProducto),
+                    Quantity: data.cantidad
+                }]
+            };
+            return apiInventory.post(`/api/inventory/companies/${empresaId}/documents`, contractData).then((r) => r.data);
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["movimientos", empresaId] });
             queryClient.invalidateQueries({ queryKey: ["stock", empresaId] });
-            queryClient.invalidateQueries({ queryKey: ["alertas-stock-bajo", empresaId] });
-            queryClient.invalidateQueries({ queryKey: ["alertas-stock-agotado", empresaId] });
+            queryClient.invalidateQueries({ queryKey: ["dashboard", "stock-bajo", empresaId] });
         },
     });
 }
