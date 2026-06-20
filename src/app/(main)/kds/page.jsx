@@ -136,9 +136,10 @@ export default function KdsPage() {
             <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
                 {itemsFiltrados.map(it => {
                     const id = getField(it, "ticketItemCen", "TicketItemCen", "idCuentaTicketItem");
-                    const status = getField(it, "status", "Status", "estadoComanda");
-                    const numero = getField(it, "dailyNumber", "DailyNumber", "numero");
-                    const createdAt = getField(it, "createdAt", "CreatedAt", "fechaCreacion", "FechaCreacion");
+                    const statusRaw = getField(it, "status", "Status", "estadoComanda");
+                    const status = statusRaw ? statusRaw.toLowerCase() : "";
+                    const numero = getField(it, "ticketCen", "TicketCen", "dailyNumber", "DailyNumber", "numero");
+                    const createdAt = getField(it, "sentAt", "SentAt", "createdAt", "CreatedAt", "fechaCreacion", "FechaCreacion");
                     const productCen = getField(it, "productCen", "ProductCen", "idProducto");
                     const quantity = getField(it, "quantity", "Quantity", "cantidad");
                     const note = getField(it, "note", "Note", "nota");
@@ -151,8 +152,8 @@ export default function KdsPage() {
                     return (
                         <div
                             key={id}
-                            className={`bg-(--background) border-l-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex flex-col gap-2 animate-in fade-in duration-500 ${status === "PREPARACION" || status === "preparing" ? "border-l-orange-500" :
-                                status === "LISTO" || status === "delivered" ? "border-l-green-500 bg-green-50/10" :
+                            className={`bg-(--background) border-l-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex flex-col gap-2 animate-in fade-in duration-500 ${status === "preparacion" || status === "preparing" ? "border-l-orange-500" :
+                                status === "listo" || status === "delivered" || status === "ready" ? "border-l-green-500 bg-green-50/10" :
                                     "border-l-blue-500"
                                 }`}
                         >
@@ -172,11 +173,11 @@ export default function KdsPage() {
                                 <p className="text-2xl font-black text-purple-600 mt-1">x{quantity}</p>
 
                                 <div className="mt-2">
-                                    <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-full ${status === "PREPARACION" || status === "preparing" ? "bg-orange-100 text-orange-700" :
-                                        status === "LISTO" || status === "delivered" ? "bg-green-100 text-green-700" :
+                                    <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-full ${status === "preparacion" || status === "preparing" ? "bg-orange-100 text-orange-700" :
+                                        status === "listo" || status === "delivered" || status === "ready" ? "bg-green-100 text-green-700" :
                                             "bg-blue-100 text-blue-700"
                                         }`}>
-                                        {status === "LISTO" || status === "delivered" ? "✓ Listo para retirar" : status}
+                                        {status === "listo" || status === "delivered" || status === "ready" ? "✓ Listo para retirar" : status}
                                     </span>
                                 </div>
 
@@ -189,23 +190,23 @@ export default function KdsPage() {
                             </div>
 
                             <div className="mt-4 flex flex-col gap-2">
-                                {status === "PENDIENTE" || status === "pending" || status === "created" ? (
+                                {status === "pendiente" || status === "pending" || status === "created" ? (
                                     <button
-                                        onClick={() => handleCambiarEstado(id, "PREPARACION")}
+                                        onClick={() => handleCambiarEstado(id, "Preparing")}
                                         className="w-full bg-violet-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-violet-700"
                                     >
                                         Empezar Preparación
                                     </button>
                                 ) : null}
-                                {status === "PREPARACION" || status === "preparing" ? (
+                                {status === "preparacion" || status === "preparing" ? (
                                     <button
-                                        onClick={() => handleCambiarEstado(id, "LISTO")}
+                                        onClick={() => handleCambiarEstado(id, "Ready")}
                                         className="w-full bg-green-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-green-700"
                                     >
                                         Listo
                                     </button>
                                 ) : null}
-                                {status === "LISTO" || status === "delivered" ? (
+                                {status === "listo" || status === "delivered" || status === "ready" ? (
                                     <div className="text-center text-green-600 font-bold text-xs py-2">
                                         ¡Listo!
                                     </div>

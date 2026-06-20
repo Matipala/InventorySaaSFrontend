@@ -27,7 +27,7 @@ export function useCrearMovimiento() {
     return useMutation({
         mutationFn: (data) => {
             const contractData = {
-                DocumentType: data.tipo === "ENTRADA" ? "ENTRY" : "EXIT",
+                DocumentType: data.tipo === "ENTRADA" ? "Entrada" : "Salida",
                 WarehouseCen: String(data.idAlmacen),
                 Reason: data.motivo || "Manual Adjustment",
                 Lines: [{

@@ -170,14 +170,14 @@ export default function DashboardPage() {
                                     <span className="text-sm font-bold text-muted-foreground">#{i+1}</span>
                                     <div>
                                         <p className="text-sm font-medium">{p.productName || p.ProductName || `Producto ${p.productCen || p.ProductCen || p.idProducto}`}</p>
-                                        <p className="text-xs text-muted-foreground">{p.totalQuantity || p.cantidad || 0} unidades vendidas</p>
+                                        <p className="text-xs text-muted-foreground">{p.quantitySold || p.QuantitySold || 0} unidades vendidas</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
                                     <div className="w-12 h-1.5 bg-secondary rounded-full overflow-hidden">
                                         <div 
                                             className="h-full bg-emerald-500" 
-                                            style={{ width: `${((p.totalQuantity || p.cantidad || 0) / (topProductos[0].totalQuantity || topProductos[0].cantidad || 1)) * 100}%` }}
+                                            style={{ width: `${((p.quantitySold || p.QuantitySold || 0) / (topProductos[0].quantitySold || topProductos[0].QuantitySold || 1)) * 100}%` }}
                                         />
                                     </div>
                                 </div>

@@ -17,7 +17,7 @@ export function useCrearUnidad() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: (data) => apiInventory.post(`/api/inventory/companies/${empresaId}/units`, data).then((r) => r.data),
+        mutationFn: (data) => apiInventory.post(`/api/inventory/companies/${empresaId}/units`, { name: data.nombre, abbreviation: data.abreviatura }).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["unidades", empresaId] });
         },
@@ -29,22 +29,11 @@ export function useActualizarUnidad() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: ({ id, data }) => apiInventory.put(`/api/inventory/companies/${empresaId}/units/${id}`, data).then((r) => r.data),
+        mutationFn: ({ id, data }) => apiInventory.put(`/api/inventory/companies/${empresaId}/units/${id}`, { name: data.nombre, abbreviation: data.abreviatura }).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["unidades", empresaId] });
         },
     });
 }
 
-export function useCambiarEstadoUnidad() {
-    const queryClient = useQueryClient();
-    const { empresaId } = useEmpresa();
 
-    return useMutation({
-        mutationFn: ({ id, activo }) =>
-            apiInventory.patch(`/api/${empresaId}/unidades/${id}/estado`, activo).then((r) => r.data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["unidades", empresaId] });
-        },
-    });
-}

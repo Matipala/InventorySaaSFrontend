@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Plus, X, CheckCircle, AlertCircle, ArrowLeftRight } from "lucide-react";
 import { useMovimientos, useCrearMovimiento } from "@/hooks/useMovimientos";
 import { useProductos } from "@/hooks/useProductos";
@@ -16,13 +16,11 @@ import {
 const TIPOS = [
   { value: "ENTRADA", label: "Entrada" },
   { value: "SALIDA", label: "Salida" },
-  { value: "TRANSFERENCIA", label: "Transferencia" },
 ];
 
 const FORM_DEFAULT = {
   idProducto: "",
   idAlmacen: "",
-  idAlmacenDestino: "",
   cantidad: "",
   tipo: "ENTRADA",
 };
@@ -32,10 +30,10 @@ function Badge({ tipo }) {
     <span
       className={cn(
         "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
-        TIPO_MOVIMIENTO_COLORS[tipo] ?? "bg-gray-100 text-gray-700"
+        TIPO_MOVIMIENTO_COLORS[tipo] ?? "bg-blue-100 text-blue-700"
       )}
     >
-      {TIPO_MOVIMIENTO_LABELS[tipo] ?? tipo}
+      {tipo?.toUpperCase() === "AJUSTE" ? "Entrada/Salida (±)" : (TIPO_MOVIMIENTO_LABELS[tipo] ?? tipo)}
     </span>
   );
 }
@@ -58,19 +56,12 @@ function EntradaForm({ onClose }) {
       setToast({ type: "error", msg: "Completa todos los campos obligatorios." });
       return;
     }
-    if (form.tipo === "TRANSFERENCIA" && !form.idAlmacenDestino) {
-      setToast({ type: "error", msg: "Selecciona el almacén destino para la transferencia." });
-      return;
-    }
 
     const payload = {
       idProducto: form.idProducto,
       idAlmacen: form.idAlmacen,
       cantidad: Number(form.cantidad),
       tipo: form.tipo,
-      ...(form.tipo === "TRANSFERENCIA" && {
-        idAlmacenDestino: form.idAlmacenDestino,
-      }),
     };
 
     mutate(payload, {
@@ -92,7 +83,7 @@ function EntradaForm({ onClose }) {
   const productosActivos = productos.filter((p) => {
     if (p.activo === false || p.Activo === false) return false;
     const status = (p.status || p.Status || '').toUpperCase();
-    if (status) return status === 'ACTIVE';
+    if (status) return status === 'ACTIVE' || status === 'ACTIVO';
     return true;
   });
 
@@ -146,13 +137,33 @@ function EntradaForm({ onClose }) {
                   "px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors",
                   form.tipo === t.value
                     ? "bg-violet-600 text-white border-violet-600"
-                    : "bg-white text-gray-600 border-gray-300 hover:border-violet-400"
+                    : "bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-violet-400"
                 )}
               >
                 {t.label}
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Almacén */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            Almacén <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={form.idAlmacen}
+            onChange={set("idAlmacen")}
+            required
+            className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-transparent dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-violet-500"
+          >
+            <option value="">Seleccionar almacén…</option>
+            {almacenes.map((a, i) => (
+              <option key={a.idAlmacen || a.IdAlmacen || a.warehouseCen || a.WarehouseCen || i} value={a.idAlmacen || a.IdAlmacen || a.warehouseCen || a.WarehouseCen}>
+                {a.nombre || a.Nombre || a.name || a.Name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Producto */}
@@ -164,61 +175,18 @@ function EntradaForm({ onClose }) {
             value={form.idProducto}
             onChange={set("idProducto")}
             required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-vioe-500"
+            className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-transparent dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-500"
           >
             <option value="">Seleccionar producto…</option>
             {productosActivos.map((p, i) => (
-              <option key={p.idProducto ?? i} value={p.idProducto}>
-                {p.nombre} — {p.sku}
+              <option key={p.idProducto || p.IdProducto || p.productCen || p.ProductCen || i} value={p.idProducto || p.IdProducto || p.productCen || p.ProductCen}>
+                {p.nombre || p.Nombre || p.name || p.Name} — {p.sku || p.Sku || p.ProductCen}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Almacén origen */}
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            {form.tipo === "TRANSFERENCIA" ? "Almacén origen" : "Almacén"}{" "}
-            <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={form.idAlmacen}
-            onChange={set("idAlmacen")}
-            required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
-          >
-            <option value="">Seleccionar almacén…</option>
-            {almacenes.map((a, i) => (
-              <option key={a.idAlmacen ?? i} value={a.idAlmacen}>
-                {a.nombre}
-              </option>
-            ))}
-          </select>
-        </div>
 
-        {/* Almacén destino — solo TRANSFERENCIA */}
-        {form.tipo === "TRANSFERENCIA" && (
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
-              Almacén destino <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={form.idAlmacenDestino}
-              onChange={set("idAlmacenDestino")}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
-            >
-              <option value="">Seleccionar almacén destino…</option>
-              {almacenes
-                .filter((a) => String(a.idAlmacen) !== form.idAlmacen)
-                .map((a, i) => (
-                  <option key={a.idAlmacen ?? i} value={a.idAlmacen}>
-                    {a.nombre}
-                  </option>
-                ))}
-            </select>
-          </div>
-        )}
 
         {/* Cantidad */}
         <div>
@@ -232,7 +200,7 @@ function EntradaForm({ onClose }) {
             onChange={set("cantidad")}
             placeholder="0"
             required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-transparent dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-violet-500"
           />
         </div>
 
@@ -261,6 +229,15 @@ function EntradaForm({ onClose }) {
 }
 
 function MovimientosTable({ movimientos, isLoading }) {
+  const [expandedRows, setExpandedRows] = useState({});
+
+  const toggleRow = (id) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-10 text-center text-sm text-gray-400">
@@ -298,15 +275,57 @@ function MovimientosTable({ movimientos, isLoading }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {movimientos.map((m, i) => (
-              <tr key={m.idMovimiento ?? i} className="hover:bg-violet-100 transition-colors">
-                <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{formatDateTime(m.fecha)}</td>
-                <td className="px-5 py-3"><Badge tipo={m.tipo} /></td>
-                <td className="px-5 py-3 text-gray-800 font-medium">{m.nombreProducto ?? m.id_producto}</td>
-                <td className="px-5 py-3 text-gray-600">{m.nombreAlmacen ?? m.id_almacen}</td>
-                <td className="px-5 py-3 text-right font-semibold text-gray-800">{m.cantidad}</td>
-              </tr>
-            ))}
+            {movimientos.map((m, i) => {
+              const id = m.idMovimiento ?? m.documentCen ?? m.DocumentCen ?? i;
+              const hasLines = m.lines && m.lines.length > 1;
+              const isExpanded = expandedRows[id];
+              return (
+                <React.Fragment key={id}>
+                  <tr className="hover:bg-violet-100 transition-colors">
+                    <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{formatDateTime(m.fecha)}</td>
+                    <td className="px-5 py-3"><Badge tipo={m.tipo} /></td>
+                    <td className="px-5 py-3 text-gray-800 font-medium">
+                      {m.nombreProducto ?? m.id_producto}
+                      {hasLines && (
+                        <button 
+                          onClick={() => toggleRow(id)}
+                          className="ml-2 text-xs text-violet-600 hover:text-violet-800 underline"
+                        >
+                          {isExpanded ? "Ocultar detalle" : "Ver detalle"}
+                        </button>
+                      )}
+                    </td>
+                    <td className="px-5 py-3 text-gray-600">{m.nombreAlmacen ?? m.id_almacen}</td>
+                    <td className="px-5 py-3 text-right font-semibold text-gray-800">{m.cantidad}</td>
+                  </tr>
+                  {isExpanded && hasLines && (
+                    <tr className="bg-gray-50">
+                      <td colSpan="5" className="px-5 py-3">
+                        <div className="bg-white border rounded-lg p-3">
+                          <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Desglose de productos</h4>
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="border-b">
+                                <th className="text-left py-1 text-gray-500 font-medium">Producto</th>
+                                <th className="text-right py-1 text-gray-500 font-medium">Cantidad</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {m.lines.map((l, li) => (
+                                <tr key={li} className="border-b border-gray-50 last:border-0">
+                                  <td className="py-1">{l.productName || l.ProductName}</td>
+                                  <td className="py-1 text-right">{l.quantity || l.Quantity}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -322,12 +341,14 @@ export default function MovimientosPage() {
   const { data: almacenes = [] } = useAlmacenes();
 
   const movimientosConNombres = (movimientos || []).map((m) => {
-    const producto = productos.find((p) => p.idProducto === m.idProducto);
-    const almacen = almacenes.find((a) => a.idAlmacen === m.idAlmacen);
     return {
       ...m,
-      nombreProducto: m.productoNombre || producto?.nombre || m.idProducto,
-      nombreAlmacen: m.almacenNombre || almacen?.nombre || m.idAlmacen,
+      fecha: m.createdAt || m.CreatedAt || m.fecha,
+      tipo: m.documentType || m.DocumentType || m.tipo,
+      nombreProducto: m.productName || m.ProductName || m.productoNombre || "Varios",
+      nombreAlmacen: m.warehouseName || m.WarehouseName || m.almacenNombre || "—",
+      cantidad: m.totalQuantity || m.TotalQuantity || m.cantidad || m.totalItems || m.TotalItems || 0,
+      lines: m.lines || m.Lines || [],
     };
   });
 

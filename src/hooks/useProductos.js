@@ -49,7 +49,7 @@ export function useEliminarProducto() {
 
     return useMutation({
         mutationFn: (id) =>
-            apiInventory.patch(`/api/inventory/companies/${empresaId}/products/${id}/status`, { status: "INACTIVE" }).then((r) => r.data),
+            apiInventory.patch(`/api/inventory/companies/${empresaId}/products/${id}/status`, { status: "Inactivo" }).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["productos", empresaId] });
         },
@@ -63,7 +63,7 @@ export function useCambiarAgotadoProducto() {
     return useMutation({
         mutationFn: ({ id, agotado }) =>
             apiInventory.patch(`/api/inventory/companies/${empresaId}/products/${id}/status`, {
-                status: agotado ? "OUT_OF_STOCK" : "ACTIVE"
+                status: agotado ? "Agotado" : "Activo"
             }).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["productos", empresaId] });
@@ -78,7 +78,7 @@ export function useCambiarEstadoProducto() {
     return useMutation({
         mutationFn: ({ id, activo }) =>
             apiInventory.patch(`/api/inventory/companies/${empresaId}/products/${id}/status`, {
-                status: activo ? "ACTIVE" : "INACTIVE"
+                status: activo ? "Activo" : "Inactivo"
             }).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["productos", empresaId] });

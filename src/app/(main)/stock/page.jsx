@@ -9,7 +9,7 @@ import { useEmpresa } from "@/context/EmpresaContext";
 
 export default function StockPage() {
   const [stockInicial, setStockInicial] = useState({ idProducto: "", idAlmacen: "", cantidad: "" });
-  const [ajuste, setAjuste] = useState({ idProducto: "", idAlmacen: "", nuevaCantidad: "", motivo: "" });
+  const [ajuste, setAjuste] = useState({ idProducto: "", idAlmacen: "", cantidadAjuste: "", motivo: "", tipoAjuste: "Entrada" });
   const [error, setError] = useState("");
   const { empresaId, loading: empresaLoading } = useEmpresa();
 
@@ -65,10 +65,11 @@ export default function StockPage() {
       await ajustar.mutateAsync({
         idProducto: ajuste.idProducto,
         idAlmacen: ajuste.idAlmacen,
-        nuevaCantidad: Number(ajuste.nuevaCantidad),
+        nuevaCantidad: Number(ajuste.cantidadAjuste),
+        tipoAjuste: ajuste.tipoAjuste,
         motivo: ajuste.motivo,
       });
-      setAjuste({ idProducto: "", idAlmacen: "", nuevaCantidad: "", motivo: "" });
+      setAjuste({ idProducto: "", idAlmacen: "", cantidadAjuste: "", motivo: "", tipoAjuste: "Entrada" });
     } catch (err) {
       setError(err.response?.data?.mensaje || err.response?.data?.title || err.message || "Ocurrió un error inesperado.");
     }
@@ -130,7 +131,11 @@ export default function StockPage() {
                 </option>
               ))}
             </select>
-            <input type="number" min="0" value={ajuste.nuevaCantidad} onChange={(e) => setAjuste((p) => ({ ...p, nuevaCantidad: e.target.value }))} required placeholder="Nueva cantidad" className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent" />
+            <select value={ajuste.tipoAjuste} onChange={(e) => setAjuste((p) => ({ ...p, tipoAjuste: e.target.value }))} required className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent">
+              <option value="Entrada">Entrada (Aumentar)</option>
+              <option value="Salida">Salida (Disminuir)</option>
+            </select>
+            <input type="number" min="1" value={ajuste.cantidadAjuste} onChange={(e) => setAjuste((p) => ({ ...p, cantidadAjuste: e.target.value }))} required placeholder="Cantidad a ajustar" className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent" />
             <input value={ajuste.motivo} onChange={(e) => setAjuste((p) => ({ ...p, motivo: e.target.value }))} required placeholder="Motivo" className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent" />
           </div>
           <button type="submit" className="rounded-lg px-4 py-2 bg-[#43206b] text-white" disabled={ajustar.isPending}>Ajustar</button>

@@ -20,14 +20,14 @@ export function useRegistrarStockInicial() {
         mutationFn: (data) => {
             const payload = {
                 warehouseCen: data.idAlmacen,
-                source: "MANUAL",
-                referenceCen: "",
-                items: [{
+                reason: "Stock inicial",
+                lines: [{
                     productCen: data.idProducto,
-                    quantity: Number(data.cantidad)
+                    quantity: Number(data.cantidad),
+                    adjustmentType: "Entrada"
                 }]
             };
-            return apiInventory.post(`/api/inventory/companies/${empresaId}/stock/increase`, payload).then((r) => r.data);
+            return apiInventory.post(`/api/inventory/companies/${empresaId}/stock/adjustments`, payload).then((r) => r.data);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["stock", empresaId] });
@@ -48,7 +48,7 @@ export function useAjusteStock() {
                 lines: [{
                     productCen: data.idProducto,
                     quantity: Number(data.nuevaCantidad),
-                    adjustmentType: "SET"
+                    adjustmentType: data.tipoAjuste || "Entrada"
                 }]
             };
             return apiInventory.post(`/api/inventory/companies/${empresaId}/stock/adjustments`, payload).then((r) => r.data);

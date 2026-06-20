@@ -16,15 +16,14 @@ export default function ConfiguracionPage() {
         apiVentas.get(`/api/sales/companies/${empresaId}/tax-configuration`)
             .then(r => {
                 const data = r.data;
-                setGlobalTaxPercentage(
-                    data.globalTaxPercentage !== undefined
-                        ? data.globalTaxPercentage
-                        : (data.GlobalTaxPercentage !== undefined ? data.GlobalTaxPercentage : 0)
-                );
+                const apiValue = data.globalTaxPercentage !== undefined
+                    ? data.globalTaxPercentage
+                    : (data.GlobalTaxPercentage !== undefined ? data.GlobalTaxPercentage : 0);
+                setGlobalTaxPercentage(apiValue === 0 ? "" : apiValue.toString());
             })
             .catch(err => {
                 console.error("Error cargando configuración:", err);
-                setGlobalTaxPercentage(13);
+                setGlobalTaxPercentage("13");
             })
             .finally(() => setLoading(false));
     }, [empresaId]);
@@ -60,9 +59,10 @@ export default function ConfiguracionPage() {
                         <input
                             type="number"
                             step="0.01"
+                            min="0"
                             className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent focus:ring-2 focus:ring-blue-500"
                             value={globalTaxPercentage}
-                            onChange={e => setGlobalTaxPercentage(Number(e.target.value))}
+                            onChange={e => setGlobalTaxPercentage(e.target.value)}
                             required
                         />
                         <p className="text-xs text-gray-500 mt-1">

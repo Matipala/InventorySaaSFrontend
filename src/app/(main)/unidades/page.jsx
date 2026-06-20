@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { Ruler } from "lucide-react";
-import { useCambiarEstadoUnidad, useCrearUnidad, useUnidades, useActualizarUnidad } from "@/hooks/useUnidades";
+import { useCrearUnidad, useUnidades, useActualizarUnidad } from "@/hooks/useUnidades";
 import { AlertError } from "@/components/ui/AlertError";
 
-const initialForm = { nombre: "", abreviatura: "", activo: true };
+const initialForm = { nombre: "", abreviatura: "" };
 
 export default function UnidadesPage() {
     const [form, setForm] = useState(initialForm);
@@ -15,7 +15,6 @@ export default function UnidadesPage() {
     const { data: unidades = [], isLoading } = useUnidades();
     const crear = useCrearUnidad();
     const actualizar = useActualizarUnidad();
-    const cambiarEstado = useCambiarEstadoUnidad();
 
     const sorted = useMemo(() => {
         return [...unidades].sort((a, b) => {
@@ -46,8 +45,7 @@ export default function UnidadesPage() {
         setEditId(idUnidad);
         setForm({ 
             nombre: u.nombre || u.Nombre || u.name || u.Name || "", 
-            abreviatura: u.abreviatura || u.Abreviatura || u.abbreviation || u.Abbreviation || "", 
-            activo: u.activo !== undefined ? u.activo : (u.Activo !== undefined ? u.Activo : (u.isActive !== undefined ? u.isActive : (u.IsActive !== undefined ? u.IsActive : true)))
+            abreviatura: u.abreviatura || u.Abreviatura || u.abbreviation || u.Abbreviation || ""
         });
         setError("");
     };
@@ -80,14 +78,6 @@ export default function UnidadesPage() {
                         className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent"
                         required
                     />
-                    <label className="flex items-center gap-2 text-sm">
-                        <input
-                            type="checkbox"
-                            checked={form.activo}
-                            onChange={(e) => setForm((p) => ({ ...p, activo: e.target.checked }))}
-                        />
-                        Activa
-                    </label>
                 </div>
 
                 <AlertError error={error} />
@@ -123,7 +113,6 @@ export default function UnidadesPage() {
                                 <tr className="text-left border-b border-gray-200 dark:border-gray-800">
                                     <th className="p-3">Nombre</th>
                                     <th className="p-3">Abreviatura</th>
-                                    <th className="p-3">Estado</th>
                                     <th className="p-3">Acciones</th>
                                 </tr>
                             </thead>
@@ -132,22 +121,14 @@ export default function UnidadesPage() {
                                     const idUnidad = u.idUnidad || u.IdUnidad || u.unitCen || u.UnitCen || `uni-${idx}`;
                                     const nombreUnidad = u.nombre || u.Nombre || u.name || u.Name || "—";
                                     const abreviaturaUnidad = u.abreviatura || u.Abreviatura || u.abbreviation || u.Abbreviation || "—";
-                                    const activoUnidad = u.activo !== undefined ? u.activo : (u.Activo !== undefined ? u.Activo : (u.isActive !== undefined ? u.isActive : (u.IsActive !== undefined ? u.IsActive : true)));
 
                                     return (
                                         <tr key={idUnidad} className="border-b border-gray-100 dark:border-gray-900">
                                             <td className="p-3">{nombreUnidad}</td>
                                             <td className="p-3">{abreviaturaUnidad}</td>
-                                            <td className="p-3">{activoUnidad ? "Activa" : "Inactiva"}</td>
                                             <td className="p-3 flex gap-2">
                                                 <button className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700" onClick={() => startEdit(u)}>
                                                     Editar
-                                                </button>
-                                                <button
-                                                    className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700"
-                                                    onClick={() => cambiarEstado.mutate({ id: idUnidad, activo: !activoUnidad })}
-                                                >
-                                                    {activoUnidad ? "Desactivar" : "Activar"}
                                                 </button>
                                             </td>
                                         </tr>

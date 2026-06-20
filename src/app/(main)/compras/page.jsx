@@ -35,7 +35,7 @@ export default function ComprasPage() {
         () => productos.filter((p) => {
             if (p.activo === false || p.Activo === false) return false;
             const status = (p.status || p.Status || '').toUpperCase();
-            if (status) return status === 'ACTIVE';
+            if (status) return status === 'ACTIVE' || status === 'ACTIVO';
             return true;
         }),
         [productos]

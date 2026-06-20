@@ -97,8 +97,8 @@ export default function ProductosPage() {
       idUnidad: p.idUnidad || p.IdUnidad || p.unitCen || p.UnitCen ? String(p.idUnidad || p.IdUnidad || p.unitCen || p.UnitCen) : "",
       precioVenta: String(p.precioVenta || p.PrecioVenta || p.salePrice || p.SalePrice || 0),
       estacion: p.estacion || p.Estacion || "",
-      activo: p.activo !== undefined ? p.activo : (p.Activo !== undefined ? p.Activo : (p.status === "ACTIVE" || p.Status === "ACTIVE")),
-      agotado86: p.agotado86 !== undefined ? p.agotado86 : (p.Agotado86 !== undefined ? p.Agotado86 : (p.status === "OUT_OF_STOCK" || p.Status === "OUT_OF_STOCK")),
+      activo: p.activo !== undefined ? p.activo : (p.Activo !== undefined ? p.Activo : (p.status === "Activo" || p.Status === "Activo")),
+      agotado86: p.agotado86 !== undefined ? p.agotado86 : (p.Agotado86 !== undefined ? p.Agotado86 : (p.status === "Agotado" || p.Status === "Agotado")),
     });
     setError("");
   };
@@ -235,8 +235,8 @@ export default function ProductosPage() {
               <tbody>
                 {productos.map((p, idx) => {
                   const idProducto = p.idProducto || p.IdProducto || p.productCen || p.ProductCen || `prod-${idx}`;
-                  const activo = p.activo !== undefined ? p.activo : (p.Activo !== undefined ? p.Activo : (p.status === "ACTIVE" || p.Status === "ACTIVE" || p.status === "OUT_OF_STOCK" || p.Status === "OUT_OF_STOCK"));
-                  const agotado86 = p.agotado86 !== undefined ? p.agotado86 : (p.Agotado86 !== undefined ? p.Agotado86 : (p.status === "OUT_OF_STOCK" || p.Status === "OUT_OF_STOCK"));
+                  const activo = p.activo !== undefined ? p.activo : (p.Activo !== undefined ? p.Activo : (p.status === "Activo" || p.Status === "Activo" || p.status === "Agotado" || p.Status === "Agotado"));
+                  const agotado86 = p.agotado86 !== undefined ? p.agotado86 : (p.Agotado86 !== undefined ? p.Agotado86 : (p.status === "Agotado" || p.Status === "Agotado"));
                   return (
                     <tr key={idProducto} className="border-b border-gray-100 dark:border-gray-900">
                       <td className="p-3">{p.sku || p.Sku}</td>
