@@ -26,6 +26,7 @@ export function useAgregarItemCuentaTicket(idCuentaTicket) {
         onSuccess: (data, variables) => {
             const finalId = variables?.idCuentaTicket || idCuentaTicket;
             queryClient.invalidateQueries({ queryKey: ["cuenta-ticket", finalId, empresaId] });
+            queryClient.invalidateQueries({ queryKey: ["ticket-items", empresaId, finalId] });
             queryClient.invalidateQueries({ queryKey: ["cuentas-tickets-abiertas", empresaId] });
         },
     });
@@ -85,7 +86,7 @@ export function useActualizarMesero(idCuentaTicket) {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: (nuevoMesero) => apiVentas.patch(`/api/sales/companies/${empresaId}/tickets/${idCuentaTicket}/waiter`, { nuevoMesero }).then((r) => r.data),
+        mutationFn: (nuevoMesero) => apiVentas.put(`/api/sales/companies/${empresaId}/tickets/${idCuentaTicket}/waiter`, { waiterCen: nuevoMesero }).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["cuenta-ticket", idCuentaTicket, empresaId] });
             queryClient.invalidateQueries({ queryKey: ["cuentas-tickets-abiertas", empresaId] });
@@ -121,5 +122,42 @@ export function useReenviarComanda(idCuentaTicket) {
             queryClient.invalidateQueries({ queryKey: ["cuenta-ticket", finalId, empresaId] });
             queryClient.invalidateQueries({ queryKey: ["cuentas-tickets-abiertas", empresaId] });
         },
+    });
+}
+
+export function useWaiters() {
+    const { empresaId } = useEmpresa();
+
+    return useQuery({
+        queryKey: ["waiters", empresaId],
+        queryFn: () => apiVentas.get(`/api/sales/companies/${empresaId}/waiters`).then((r) => r.data),
+        enabled: !!empresaId,
+    });
+}
+
+export function usePaymentMethods() {
+    return useQuery({
+        queryKey: ["payment-methods"],
+        queryFn: () => apiVentas.get(`/api/sales/payment-methods`).then((r) => r.data),
+    });
+}
+
+export function useTicketTotals(ticketCen) {
+    const { empresaId } = useEmpresa();
+
+    return useQuery({
+        queryKey: ["ticket-totals", empresaId, ticketCen],
+        queryFn: () => apiVentas.get(`/api/sales/companies/${empresaId}/tickets/${ticketCen}/totals`).then((r) => r.data),
+        enabled: !!empresaId && !!ticketCen,
+    });
+}
+
+export function useTicketItems(ticketCen) {
+    const { empresaId } = useEmpresa();
+
+    return useQuery({
+        queryKey: ["ticket-items", empresaId, ticketCen],
+        queryFn: () => apiVentas.get(`/api/sales/companies/${empresaId}/tickets/${ticketCen}/items`).then((r) => r.data),
+        enabled: !!empresaId && !!ticketCen,
     });
 }

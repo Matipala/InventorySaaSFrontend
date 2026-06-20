@@ -3,22 +3,28 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Plus, CheckCircle, AlertCircle, Receipt } from "lucide-react";
-import { useCompras, useCrearCompra, useConfirmarCompra } from "@/hooks/useCompras";
+import { useCompras, useCrearCompra, useConfirmarCompra, useProveedores } from "@/hooks/useCompras";
 import { useProductos } from "@/hooks/useProductos";
 import { useAlmacenes } from "@/hooks/useAlmacenes";
 import { useEmpresa } from "@/context/EmpresaContext";
 import { formatDateTime, cn } from "@/lib/utils";
 
-const EMPTY_ITEM = { productId: "", almacenId: "", quantity: "" };
+const EMPTY_ITEM = { productCen: "", quantity: "" };
 
 export default function ComprasPage() {
     const { empresaId } = useEmpresa();
-    const { data: compras = [], isLoading } = useCompras();
+    const [page, setPage] = useState(1);
+    const { data: comprasData, isLoading } = useCompras({ page, pageSize: 20 });
     const { data: productos = [] } = useProductos();
     const { data: almacenes = [] } = useAlmacenes();
+    const { data: proveedores = [] } = useProveedores();
 
-    const [supplier, setSupplier] = useState("");
-    const [date, setDate] = useState("");
+    const compras = comprasData?.items || [];
+    const totalPages = comprasData?.totalPages || 1;
+    const totalCount = comprasData?.totalCount || 0;
+
+    const [supplierCen, setSupplierCen] = useState("");
+    const [warehouseCen, setWarehouseCen] = useState("");
     const [items, setItems] = useState([EMPTY_ITEM]);
     const [toast, setToast] = useState(null);
 
@@ -26,9 +32,22 @@ export default function ComprasPage() {
     const confirmarCompra = useConfirmarCompra();
 
     const productosActivos = useMemo(
-        () => productos.filter((p) => p.activo !== false),
+        () => productos.filter((p) => {
+            if (p.activo === false || p.Activo === false) return false;
+            const status = (p.status || p.Status || '').toUpperCase();
+            if (status) return status === 'ACTIVE';
+            return true;
+        }),
         [productos]
     );
+
+    const getField = (obj, ...keys) => {
+        if (!obj) return null;
+        for (const k of keys) {
+            if (obj[k] !== undefined && obj[k] !== null) return obj[k];
+        }
+        return null;
+    };
 
     const setItem = (index, field, value) => {
         setItems((prev) =>
@@ -50,8 +69,12 @@ export default function ComprasPage() {
             setToast({ type: "error", msg: "Selecciona una empresa primero." });
             return;
         }
-        if (!supplier.trim()) {
+        if (!supplierCen.trim()) {
             setToast({ type: "error", msg: "El proveedor es obligatorio." });
+            return;
+        }
+        if (!warehouseCen.trim()) {
+            setToast({ type: "error", msg: "El almacen es obligatorio." });
             return;
         }
         if (items.length === 0) {
@@ -60,13 +83,11 @@ export default function ComprasPage() {
         }
 
         const parsedItems = items.map((item) => ({
-            productId: item.productId,
-            almacenId: item.almacenId,
+            productCen: item.productCen,
             quantity: Number(item.quantity),
-            empresaId: empresaId,
         }));
 
-        if (parsedItems.some((i) => !i.productId || !i.almacenId || !i.quantity)) {
+        if (parsedItems.some((i) => !i.productCen || !i.quantity)) {
             setToast({ type: "error", msg: "Completa todos los datos de los items." });
             return;
         }
@@ -76,15 +97,15 @@ export default function ComprasPage() {
         }
 
         const payload = {
-            supplier: supplier.trim(),
-            date: date ? new Date(date).toISOString() : null,
+            supplierCen: supplierCen.trim(),
+            warehouseCen: warehouseCen.trim(),
             items: parsedItems,
         };
 
         try {
             await crearCompra.mutateAsync(payload);
-            setSupplier("");
-            setDate("");
+            setSupplierCen("");
+            setWarehouseCen("");
             setItems([EMPTY_ITEM]);
             setToast({ type: "success", msg: "Compra creada correctamente." });
         } catch (err) {
@@ -135,19 +156,32 @@ export default function ComprasPage() {
                 className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-(--background) space-y-4"
             >
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <input
-                        value={supplier}
-                        onChange={(e) => setSupplier(e.target.value)}
-                        placeholder="Proveedor"
+                    <select
+                        value={supplierCen}
+                        onChange={(e) => setSupplierCen(e.target.value)}
                         required
                         className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent"
-                    />
-                    <input
-                        type="date"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
+                    >
+                        <option value="">Seleccione proveedor</option>
+                        {proveedores.map((p) => (
+                            <option key={getField(p, "supplierCen", "SupplierCen")} value={getField(p, "supplierCen", "SupplierCen")}>
+                                {getField(p, "name", "Name")}
+                            </option>
+                        ))}
+                    </select>
+                    <select
+                        value={warehouseCen}
+                        onChange={(e) => setWarehouseCen(e.target.value)}
+                        required
                         className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent"
-                    />
+                    >
+                        <option value="">Seleccione almacen</option>
+                        {almacenes.map((a) => (
+                            <option key={getField(a, "warehouseCen", "WarehouseCen", "idAlmacen")} value={getField(a, "warehouseCen", "WarehouseCen", "idAlmacen")}>
+                                {getField(a, "name", "Name", "nombre", "Nombre")}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="space-y-3">
@@ -169,28 +203,15 @@ export default function ComprasPage() {
                             className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center"
                         >
                             <select
-                                value={item.productId}
-                                onChange={(e) => setItem(index, "productId", e.target.value)}
+                                value={item.productCen}
+                                onChange={(e) => setItem(index, "productCen", e.target.value)}
                                 required
                                 className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent"
                             >
                                 <option value="">Producto</option>
                                 {productosActivos.map((p) => (
-                                    <option key={p.idProducto} value={p.idProducto}>
-                                        {p.nombre} - {p.sku}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                value={item.almacenId}
-                                onChange={(e) => setItem(index, "almacenId", e.target.value)}
-                                required
-                                className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent"
-                            >
-                                <option value="">Almacen</option>
-                                {almacenes.map((a) => (
-                                    <option key={a.idAlmacen} value={a.idAlmacen}>
-                                        {a.nombre}
+                                    <option key={getField(p, "productCen", "ProductCen", "idProducto", "IdProducto")} value={getField(p, "productCen", "ProductCen", "idProducto", "IdProducto")}>
+                                        {getField(p, "name", "Name", "nombre", "Nombre")} - {getField(p, "sku", "Sku")}
                                     </option>
                                 ))}
                             </select>
@@ -231,7 +252,7 @@ export default function ComprasPage() {
             <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-(--background)">
                 <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800 flex items-center gap-2">
                     <Receipt size={16} />
-                    <p className="font-semibold">Listado de compras</p>
+                    <p className="font-semibold">Listado de compras ({totalCount})</p>
                 </div>
 
                 {isLoading ? (
@@ -241,7 +262,7 @@ export default function ComprasPage() {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="text-left border-b border-gray-200 dark:border-gray-800">
-                                    <th className="p-3">ID</th>
+                                    <th className="p-3">CEN</th>
                                     <th className="p-3">Proveedor</th>
                                     <th className="p-3">Fecha</th>
                                     <th className="p-3">Estado</th>
@@ -257,36 +278,68 @@ export default function ComprasPage() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    compras.map((c) => (
-                                        <tr key={c.id} className="border-b border-gray-100 dark:border-gray-900">
-                                            <td className="p-3">{c.id}</td>
-                                            <td className="p-3">{c.supplier}</td>
-                                            <td className="p-3">{formatDateTime(c.date)}</td>
-                                            <td className="p-3">{c.status}</td>
-                                            <td className="p-3">{c.items?.length ?? 0}</td>
-                                            <td className="p-3 flex flex-wrap gap-2">
-                                                <Link
-                                                    href={`/compras/${c.id}`}
-                                                    className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700"
-                                                >
-                                                    Ver detalle
-                                                </Link>
-                                                {String(c.status).toLowerCase() === "pending" && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => onConfirm(c.id)}
+                                    compras.map((c) => {
+                                        const id = getField(c, "orderCen", "OrderCen");
+                                        const provCen = getField(c, "supplierCen", "SupplierCen");
+                                        const fecha = getField(c, "createdAt", "CreatedAt", "date", "Date");
+                                        const estado = getField(c, "status", "Status");
+                                        const itemCount = getField(c, "itemCount", "ItemCount");
+                                        const provName = proveedores.find(p =>
+                                            getField(p, "supplierCen", "SupplierCen") === provCen
+                                        );
+                                        return (
+                                            <tr key={id} className="border-b border-gray-100 dark:border-gray-900">
+                                                <td className="p-3 font-mono text-xs">{id?.slice(0, 8)}...</td>
+                                                <td className="p-3">{provName ? getField(provName, "name", "Name") : provCen}</td>
+                                                <td className="p-3">{fecha ? formatDateTime(fecha) : '-'}</td>
+                                                <td className="p-3">{estado}</td>
+                                                <td className="p-3">{itemCount ?? 0}</td>
+                                                <td className="p-3 flex flex-wrap gap-2">
+                                                    <Link
+                                                        href={`/compras/${id}`}
                                                         className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700"
-                                                        disabled={confirmarCompra.isPending}
                                                     >
-                                                        Confirmar
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))
+                                                        Ver detalle
+                                                    </Link>
+                                                    {String(estado).toLowerCase() === "pending" && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => onConfirm(id)}
+                                                            className="px-3 py-1 rounded border border-gray-300 dark:border-gray-700"
+                                                            disabled={confirmarCompra.isPending}
+                                                        >
+                                                            Confirmar
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 )}
                             </tbody>
                         </table>
+                    </div>
+                )}
+
+                {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 p-4 border-t border-gray-200 dark:border-gray-800">
+                        <button
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page === 1}
+                            className="px-3 py-1 rounded border disabled:opacity-50"
+                        >
+                            Anterior
+                        </button>
+                        <span className="text-sm">
+                            Página {page} de {totalPages}
+                        </span>
+                        <button
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            disabled={page === totalPages}
+                            className="px-3 py-1 rounded border disabled:opacity-50"
+                        >
+                            Siguiente
+                        </button>
                     </div>
                 )}
             </div>

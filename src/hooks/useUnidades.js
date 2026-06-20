@@ -7,7 +7,7 @@ export function useUnidades() {
 
     return useQuery({
         queryKey: ["unidades", empresaId],
-        queryFn: () => apiInventory.get(`/api/unidades`).then((r) => r.data),
+        queryFn: () => apiInventory.get(`/api/inventory/companies/${empresaId}/units`).then((r) => r.data),
         enabled: !!empresaId,
     });
 }
@@ -17,7 +17,7 @@ export function useCrearUnidad() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: (data) => apiInventory.post(`/api/unidades`, data).then((r) => r.data),
+        mutationFn: (data) => apiInventory.post(`/api/inventory/companies/${empresaId}/units`, data).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["unidades", empresaId] });
         },
@@ -29,7 +29,7 @@ export function useActualizarUnidad() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: ({ id, data }) => apiInventory.put(`/api/unidades/${id}`, data).then((r) => r.data),
+        mutationFn: ({ id, data }) => apiInventory.put(`/api/inventory/companies/${empresaId}/units/${id}`, data).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["unidades", empresaId] });
         },
@@ -41,7 +41,8 @@ export function useCambiarEstadoUnidad() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: ({ id, activo }) => apiInventory.patch(`/api/unidades/${id}/estado`, activo).then((r) => r.data),
+        mutationFn: ({ id, activo }) =>
+            apiInventory.patch(`/api/${empresaId}/unidades/${id}/estado`, activo).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["unidades", empresaId] });
         },

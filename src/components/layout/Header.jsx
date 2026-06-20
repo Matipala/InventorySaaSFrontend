@@ -13,7 +13,7 @@ export default function Header() {
     useEffect(() => {
         // List all companies without empresa header (no filter needed)
         apiInventory
-            .get("/api/empresa")
+            .get("/api/inventory/companies")
             .then((res) => setEmpresas(res.data))
             .catch(() => { });
     }, []);
@@ -43,8 +43,9 @@ export default function Header() {
                     >
                         <option value="">Seleccionar empresa…</option>
                         {empresas.map((emp, idx) => (
-                            <option key={emp.idEmpresa || emp.IdEmpresa || idx} value={emp.idEmpresa || emp.IdEmpresa}>
-                                {emp.nombre || emp.Nombre}
+                            <option key={emp.companyCen || emp.CompanyCen || emp.idEmpresa || emp.IdEmpresa || idx}
+                                value={emp.companyCen || emp.CompanyCen || emp.idEmpresa || emp.IdEmpresa}>
+                                {emp.name || emp.Name || emp.nombre || emp.Nombre}
                             </option>
                         ))}
                     </select>

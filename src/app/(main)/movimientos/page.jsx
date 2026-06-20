@@ -89,7 +89,12 @@ function EntradaForm({ onClose }) {
     });
   };
 
-  const productosActivos = productos.filter((p) => p.activo !== false);
+  const productosActivos = productos.filter((p) => {
+    if (p.activo === false || p.Activo === false) return false;
+    const status = (p.status || p.Status || '').toUpperCase();
+    if (status) return status === 'ACTIVE';
+    return true;
+  });
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">

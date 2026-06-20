@@ -3,26 +3,50 @@
 import Link from "next/link";
 import { useMemo, use } from "react";
 import { ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";
-import { useCompra, useConfirmarCompra } from "@/hooks/useCompras";
+import { useCompra, useConfirmarCompra, useProveedores } from "@/hooks/useCompras";
 import { useProductos } from "@/hooks/useProductos";
 import { formatDateTime, cn } from "@/lib/utils";
+
+const getField = (obj, ...keys) => {
+    if (!obj) return null;
+    for (const k of keys) {
+        if (obj[k] !== undefined && obj[k] !== null) return obj[k];
+    }
+    return null;
+};
 
 export default function CompraDetallePage({ params }) {
     const resolvedParams = use(params);
     const id = resolvedParams.id;
     const { data: compra, isLoading } = useCompra(id);
     const { data: productos = [] } = useProductos();
+    const { data: proveedores = [] } = useProveedores();
     const confirmarCompra = useConfirmarCompra();
 
     const productMap = useMemo(() => {
         const map = new Map();
-        productos.forEach((p) => map.set(String(p.idProducto), p));
+        productos.forEach((p) => {
+            const key = getField(p, "productCen", "ProductCen", "idProducto", "IdProducto");
+            if (key) map.set(String(key), p);
+        });
         return map;
     }, [productos]);
 
     const onConfirm = () => {
         confirmarCompra.mutate(id);
     };
+
+    const orderCen = getField(compra, "orderCen", "OrderCen");
+    const status = getField(compra, "status", "Status");
+    const createdAt = getField(compra, "createdAt", "CreatedAt", "date", "Date");
+    const confirmedAt = getField(compra, "confirmedAt", "ConfirmedAt");
+    const supplierCen = getField(compra, "supplierCen", "SupplierCen");
+    const warehouseCen = getField(compra, "warehouseCen", "WarehouseCen");
+    const items = getField(compra, "items", "Items") || [];
+
+    const supplierName = proveedores.find(p =>
+        getField(p, "supplierCen", "SupplierCen") === supplierCen
+    );
 
     return (
         <div className="space-y-6">
@@ -36,7 +60,7 @@ export default function CompraDetallePage({ params }) {
                 </Link>
                 <div>
                     <h1 className="text-2xl font-bold text-(--foreground)">Detalle de compra</h1>
-                    <p className="text-sm text-(--foreground)/70 mt-1">Compra #{id}</p>
+                    <p className="text-sm text-(--foreground)/70 mt-1">Compra #{orderCen?.slice(0, 8)}</p>
                 </div>
             </div>
 
@@ -62,19 +86,31 @@ export default function CompraDetallePage({ params }) {
                     <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-(--background) grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
                             <p className="text-xs uppercase text-(--foreground)/60">Proveedor</p>
-                            <p className="font-semibold">{compra.supplier}</p>
+                            <p className="font-semibold">{supplierName ? getField(supplierName, "name", "Name") : supplierCen}</p>
                         </div>
                         <div>
                             <p className="text-xs uppercase text-(--foreground)/60">Fecha</p>
-                            <p className="font-semibold">{formatDateTime(compra.date)}</p>
+                            <p className="font-semibold">{createdAt ? formatDateTime(createdAt) : '-'}</p>
                         </div>
                         <div>
                             <p className="text-xs uppercase text-(--foreground)/60">Estado</p>
-                            <p className="font-semibold">{compra.status}</p>
+                            <p className="font-semibold">{status}</p>
                         </div>
+                        {confirmedAt && (
+                            <div>
+                                <p className="text-xs uppercase text-(--foreground)/60">Confirmada el</p>
+                                <p className="font-semibold">{formatDateTime(confirmedAt)}</p>
+                            </div>
+                        )}
+                        {warehouseCen && (
+                            <div>
+                                <p className="text-xs uppercase text-(--foreground)/60">Almacen</p>
+                                <p className="font-semibold">{warehouseCen}</p>
+                            </div>
+                        )}
                     </div>
 
-                    {String(compra.status).toLowerCase() === "pending" && (
+                    {String(status).toLowerCase() === "pending" && (
                         <button
                             type="button"
                             onClick={onConfirm}
@@ -94,29 +130,29 @@ export default function CompraDetallePage({ params }) {
                                 <thead>
                                     <tr className="text-left border-b border-gray-200 dark:border-gray-800">
                                         <th className="p-3">Producto</th>
-                                        <th className="p-3">Almacen</th>
                                         <th className="p-3">Cantidad</th>
-                                        <th className="p-3">Empresa</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {compra.items?.length ? (
-                                        compra.items.map((item, index) => {
-                                            const product = productMap.get(String(item.productId));
+                                    {items.length ? (
+                                        items.map((item, index) => {
+                                            const productCen = getField(item, "productCen", "ProductCen", "productId");
+                                            const qty = getField(item, "quantity", "Quantity");
+                                            const product = productMap.get(String(productCen));
                                             return (
-                                                <tr key={`${item.productId}-${index}`} className="border-b border-gray-100 dark:border-gray-900">
+                                                <tr key={`${productCen}-${index}`} className="border-b border-gray-100 dark:border-gray-900">
                                                     <td className="p-3">
-                                                        {product ? `${product.nombre} (${product.sku})` : `ID ${item.productId}`}
+                                                        {product
+                                                            ? `${getField(product, "name", "Name", "nombre", "Nombre")} (${getField(product, "sku", "Sku")})`
+                                                            : `ID ${productCen}`}
                                                     </td>
-                                                    <td className="p-3">{item.almacenId}</td>
-                                                    <td className="p-3">{item.quantity}</td>
-                                                    <td className="p-3">{item.empresaId}</td>
+                                                    <td className="p-3">{qty}</td>
                                                 </tr>
                                             );
                                         })
                                     ) : (
                                         <tr>
-                                            <td className="p-3 text-sm text-gray-500" colSpan={4}>
+                                            <td className="p-3 text-sm text-gray-500" colSpan={2}>
                                                 No hay items para esta compra.
                                             </td>
                                         </tr>

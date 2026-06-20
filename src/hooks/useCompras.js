@@ -2,12 +2,18 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import apiCompras from "@/lib/apiCompras";
 import { useEmpresa } from "@/context/EmpresaContext";
 
-export function useCompras() {
+export function useCompras(filters = {}) {
     const { empresaId } = useEmpresa();
+    const { status, page = 1, pageSize = 20, sortDescending = true } = filters;
 
     return useQuery({
-        queryKey: ["compras", empresaId],
-        queryFn: () => apiCompras.get(`/api/purchases/companies/${empresaId}/orders`).then((r) => r.data),
+        queryKey: ["compras", empresaId, status, page, pageSize, sortDescending],
+        queryFn: () =>
+            apiCompras
+                .get(`/api/purchases/companies/${empresaId}/orders`, {
+                    params: { status, page, pageSize, sortDescending },
+                })
+                .then((r) => r.data),
         enabled: !!empresaId,
     });
 }
@@ -44,5 +50,15 @@ export function useConfirmarCompra() {
             queryClient.invalidateQueries({ queryKey: ["compras", empresaId] });
             queryClient.invalidateQueries({ queryKey: ["compra", empresaId] });
         },
+    });
+}
+
+export function useProveedores() {
+    const { empresaId } = useEmpresa();
+
+    return useQuery({
+        queryKey: ["proveedores", empresaId],
+        queryFn: () => apiCompras.get(`/api/purchases/companies/${empresaId}/suppliers`).then((r) => r.data),
+        enabled: !!empresaId,
     });
 }

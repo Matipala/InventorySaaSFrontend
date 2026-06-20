@@ -11,7 +11,10 @@ import {
     useEnviarComanda,
     useActualizarMesero,
     useCancelarCuentaTicket,
-    useReenviarComanda
+    useReenviarComanda,
+    useWaiters,
+    usePaymentMethods,
+    useTicketItems
 } from "@/hooks/useCuentasTickets";
 import { useProductos } from "@/hooks/useProductos";
 import { useAlmacenes } from "@/hooks/useAlmacenes";
@@ -21,7 +24,7 @@ export default function PdvPage() {
     const [cuentaId, setCuentaId] = useState(null);
     const [mesero, setMesero] = useState("");
     const [item, setItem] = useState({ idProducto: "", cantidad: 1, nota: "" });
-    const [pago, setPago] = useState({ monto: "" });
+    const [pago, setPago] = useState({ monto: "", metodo: "EFECTIVO" });
     const [error, setError] = useState("");
     const [toast, setToast] = useState(null);
     const [editandoMesero, setEditandoMesero] = useState(false);
@@ -36,9 +39,12 @@ export default function PdvPage() {
     const reenviarComanda = useReenviarComanda(cuentaId);
 
     const { data: cuenta, isLoading: loadingCuenta } = useCuentaTicketById(cuentaId);
+    const { data: ticketItems = [] } = useTicketItems(cuentaId);
     const { data: cuentasAbiertas = [], isLoading: loadingAbiertas } = useCuentasAbiertas();
     const { data: productos = [] } = useProductos();
     const { data: almacenes = [] } = useAlmacenes();
+    const { data: waiters = [] } = useWaiters();
+    const { data: paymentMethods = [] } = usePaymentMethods();
 
     const handleCrearCuenta = async () => {
         if (!mesero.trim()) {
@@ -146,12 +152,12 @@ export default function PdvPage() {
             console.log("Iniciando proceso de pago para cuenta:", cuentaId);
             await pagarCuenta.mutateAsync({
                 idCuentaTicket: cuentaId,
-                metodoPago: "EFECTIVO"
+                metodoPago: pago.metodo || "EFECTIVO"
             });
             console.log("Pago exitoso");
             setToast({ type: "success", msg: "Cuenta pagada y cerrada con éxito." });
             setCuentaId(null);
-            setPago({ monto: "" });
+            setPago({ monto: "", metodo: "EFECTIVO" });
             setTimeout(() => setToast(null), 3000);
         } catch (e) {
             console.error("Error al procesar pago:", e);
@@ -159,7 +165,7 @@ export default function PdvPage() {
         }
     };
 
-    const itemsCuenta = cuenta?.items || cuenta?.Items || [];
+    const itemsCuenta = ticketItems;
     const subtotal = cuenta?.subtotal || cuenta?.Subtotal || 0;
     const impuesto = cuenta?.impuesto || cuenta?.Impuesto || 0;
     const total = cuenta?.total || cuenta?.Total || 0;
@@ -227,12 +233,27 @@ export default function PdvPage() {
                     <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
                         <label className="text-xs font-semibold text-gray-500 uppercase mb-2 block">Nuevo Ticket</label>
                         <div className="space-y-2">
-                            <input
-                                placeholder="Nombre del mesero..."
+                            <select
                                 className="w-full border rounded-lg px-3 py-2 text-sm bg-transparent"
                                 value={mesero}
                                 onChange={e => setMesero(e.target.value)}
-                            />
+                            >
+                                <option value="">Mesero...</option>
+                                {waiters.map(w => (
+                                    <option key={w.waiterCen || w.WaiterCen} value={w.name || w.Name}>
+                                        {w.name || w.Name}
+                                    </option>
+                                ))}
+                                {waiters.length === 0 && <option value="">Escribe un mesero...</option>}
+                            </select>
+                            {waiters.length === 0 && (
+                                <input
+                                    placeholder="Nombre del mesero..."
+                                    className="w-full border rounded-lg px-3 py-2 text-sm bg-transparent"
+                                    value={mesero}
+                                    onChange={e => setMesero(e.target.value)}
+                                />
+                            )}
                             <button
                                 onClick={handleCrearCuenta}
                                 disabled={crearCuenta.isPending}
@@ -319,13 +340,11 @@ export default function PdvPage() {
 
                         <div className="flex-1 overflow-y-auto p-4 space-y-3">
                             {itemsCuenta.map((it, idx) => {
-                                const idIt = it.idCuentaTicketItem || it.IdCuentaTicketItem || idx;
-                                const nomP = productos.find(p => (p.idProducto || p.IdProducto || p.productCen || p.ProductCen) === it.idProducto)?.nombre || 
-                                            productos.find(p => (p.idProducto || p.IdProducto || p.productCen || p.ProductCen) === it.idProducto)?.Name || 
-                                            `Producto ${it.idProducto}`;
-                                const cantIt = it.cantidad || it.Cantidad;
-                                const subIt = it.subtotal || it.Subtotal;
-                                const estIt = it.estadoComanda || it.EstadoComanda;
+                                const idIt = it.ticketItemCen || it.TicketItemCen || it.idCuentaTicketItem || it.IdCuentaTicketItem || idx;
+                                const nomP = it.productName || it.ProductName || it.nombre || it.Nombre || `Producto ${it.productCen || it.ProductCen || it.idProducto}`;
+                                const cantIt = it.quantity || it.Quantity || it.cantidad || it.Cantidad;
+                                const subIt = it.unitPrice || it.UnitPrice ? (it.unitPrice || it.UnitPrice || 0) * (cantIt || 0) : (it.subtotal || it.Subtotal);
+                                const estIt = it.status || it.Status || it.estadoComanda || it.EstadoComanda;
                                 
                                 return (
                                     <div key={idIt} className="flex justify-between items-start border-b border-gray-50 dark:border-gray-900 pb-2">
@@ -390,7 +409,13 @@ export default function PdvPage() {
                                 >
                                     <option value="">Seleccione un producto...</option>
                                     {productos
-                                        .filter(p => (p.activo !== undefined ? p.activo : p.Activo) && !(p.agotado86 !== undefined ? p.agotado86 : p.Agotado86))
+                                        .filter(p => {
+                                            const status = (p.status || p.Status || '').toUpperCase();
+                                            const esActivo = p.activo !== undefined ? p.activo : p.Activo;
+                                            const esAgotado = p.agotado86 !== undefined ? p.agotado86 : p.Agotado86;
+                                            if (status) return status === 'ACTIVE';
+                                            return esActivo && !esAgotado;
+                                        })
                                         .map(p => {
                                             const id = p.idProducto || p.IdProducto || p.productCen || p.ProductCen;
                                             const nom = p.nombre || p.Nombre || p.name || p.Name;
@@ -440,7 +465,7 @@ export default function PdvPage() {
                                         disabled={!cuentaId || enviarComanda.isPending}
                                         className="flex-1 bg-purple-600 text-white py-2 rounded-lg font-bold hover:bg-purple-700 disabled:opacity-50 transition-colors"
                                     >
-                                        {enviarComanda.isPending ? "Enviando..." : "Comanda"}
+                                        {enviarComanda.isPending ? "Enviando..." : "Enviar Comanda"}
                                     </button>
                                 </div>
                             </form>
@@ -452,6 +477,29 @@ export default function PdvPage() {
                                 Registrar Pago
                             </h3>
                             <form onSubmit={handlePagar} className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-500 mb-1 block">Método de Pago</label>
+                                    {paymentMethods.length > 0 ? (
+                                        <select
+                                            className="w-full border rounded-lg px-3 py-2 bg-transparent"
+                                            value={pago.metodo}
+                                            onChange={e => setPago(p => ({ ...p, metodo: e.target.value }))}
+                                        >
+                                            {paymentMethods.map(m => (
+                                                <option key={m.paymentMethodCode || m.PaymentMethodCode} value={m.paymentMethodCode || m.PaymentMethodCode}>
+                                                    {m.name || m.Name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <input
+                                            type="text"
+                                            className="w-full border rounded-lg px-3 py-2 bg-transparent"
+                                            value={pago.metodo}
+                                            onChange={e => setPago(p => ({ ...p, metodo: e.target.value }))}
+                                        />
+                                    )}
+                                </div>
                                 <div>
                                     <label className="text-xs font-semibold text-gray-500 mb-1 block">Efectivo Recibido (Bs)</label>
                                     <input

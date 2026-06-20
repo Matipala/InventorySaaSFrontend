@@ -7,7 +7,7 @@ export function useAlmacenes() {
 
     return useQuery({
         queryKey: ["almacenes", empresaId],
-        queryFn: () => apiInventory.get(`/api/almacenes`).then((r) => r.data),
+        queryFn: () => apiInventory.get(`/api/inventory/companies/${empresaId}/warehouses`).then((r) => r.data),
         enabled: !!empresaId,
     });
 }
@@ -17,7 +17,7 @@ export function useCrearAlmacen() {
     const { empresaId } = useEmpresa();
 
     return useMutation({
-        mutationFn: (data) => apiInventory.post(`/api/almacenes`, data).then((r) => r.data),
+        mutationFn: (data) => apiInventory.post(`/api/${empresaId}/almacenes`, data).then((r) => r.data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["almacenes", empresaId] });
         },

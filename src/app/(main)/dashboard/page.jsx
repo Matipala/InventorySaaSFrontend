@@ -63,7 +63,7 @@ export default function DashboardPage() {
   const stats = [
     {
       title: "Ventas del Día",
-      value: formatCurrency(resumenDiario?.totalVentas || 0),
+      value: formatCurrency(resumenDiario?.totalSales || resumenDiario?.totalVentas || 0),
       icon: TrendingUp,
       color: "text-emerald-600",
       bg: "bg-emerald-50",
@@ -72,7 +72,7 @@ export default function DashboardPage() {
     },
     {
       title: "Tickets Activos",
-      value: resumenDiario?.cantidadTickets || 0,
+      value: resumenDiario?.ticketsCount || resumenDiario?.cantidadTickets || 0,
       icon: Receipt,
       color: "text-blue-600",
       bg: "bg-blue-50",
@@ -175,15 +175,15 @@ export default function DashboardPage() {
                                 <div className="flex items-center gap-3">
                                     <span className="text-sm font-bold text-muted-foreground">#{i+1}</span>
                                     <div>
-                                        <p className="text-sm font-medium">Producto ID: {p.idProducto}</p>
-                                        <p className="text-xs text-muted-foreground">{p.cantidad} unidades vendidas</p>
+                                        <p className="text-sm font-medium">{p.productName || p.ProductName || `Producto ${p.productCen || p.ProductCen || p.idProducto}`}</p>
+                                        <p className="text-xs text-muted-foreground">{p.totalQuantity || p.cantidad || 0} unidades vendidas</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
                                     <div className="w-12 h-1.5 bg-secondary rounded-full overflow-hidden">
                                         <div 
                                             className="h-full bg-emerald-500" 
-                                            style={{ width: `${(p.cantidad / topProductos[0].cantidad) * 100}%` }}
+                                            style={{ width: `${((p.totalQuantity || p.cantidad || 0) / (topProductos[0].totalQuantity || topProductos[0].cantidad || 1)) * 100}%` }}
                                         />
                                     </div>
                                 </div>

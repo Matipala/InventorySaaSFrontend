@@ -7,21 +7,25 @@ import { useEmpresa } from "@/context/EmpresaContext";
 
 export default function ConfiguracionPage() {
     const { empresaId } = useEmpresa();
-    const [config, setConfig] = useState({ nombreImpuesto: "IVA", porcentajeImpuesto: 0 });
+    const [globalTaxPercentage, setGlobalTaxPercentage] = useState(0);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         if (!empresaId) return;
-        apiVentas.get(`/api/sales/companies/${empresaId}/configuracion`)
+        apiVentas.get(`/api/sales/companies/${empresaId}/tax-configuration`)
             .then(r => {
                 const data = r.data;
-                setConfig({
-                    nombreImpuesto: data.nombreImpuesto || data.NombreImpuesto || "IVA",
-                    porcentajeImpuesto: data.porcentajeImpuesto !== undefined ? data.porcentajeImpuesto : (data.PorcentajeImpuesto !== undefined ? data.PorcentajeImpuesto : 0)
-                });
+                setGlobalTaxPercentage(
+                    data.globalTaxPercentage !== undefined
+                        ? data.globalTaxPercentage
+                        : (data.GlobalTaxPercentage !== undefined ? data.GlobalTaxPercentage : 0)
+                );
             })
-            .catch(err => console.error("Error cargando configuración:", err))
+            .catch(err => {
+                console.error("Error cargando configuración:", err);
+                setGlobalTaxPercentage(13);
+            })
             .finally(() => setLoading(false));
     }, [empresaId]);
 
@@ -29,12 +33,9 @@ export default function ConfiguracionPage() {
         e.preventDefault();
         setSaving(true);
         try {
-            // Enviamos el objeto mapeado para asegurar compatibilidad
-            const payload = {
-                NombreImpuesto: config.nombreImpuesto,
-                PorcentajeImpuesto: config.porcentajeImpuesto
-            };
-            await apiVentas.put(`/api/sales/companies/${empresaId}/configuracion`, payload);
+            await apiVentas.put(`/api/sales/companies/${empresaId}/tax-configuration`, {
+                globalTaxPercentage: Number(globalTaxPercentage)
+            });
             alert("Configuración guardada correctamente");
         } catch (e) {
             console.error("Error al guardar:", e);
@@ -55,23 +56,13 @@ export default function ConfiguracionPage() {
             <div className="bg-(--background) p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium mb-1">Nombre del Impuesto (ej: IVA, IT)</label>
-                        <input
-                            className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent focus:ring-2 focus:ring-blue-500"
-                            value={config.nombreImpuesto}
-                            onChange={e => setConfig(p => ({ ...p, nombreImpuesto: e.target.value }))}
-                            placeholder="IVA"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Porcentaje de Impuesto (%)</label>
+                        <label className="block text-sm font-medium mb-1">Porcentaje de Impuesto Global (%)</label>
                         <input
                             type="number"
                             step="0.01"
                             className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent focus:ring-2 focus:ring-blue-500"
-                            value={config.porcentajeImpuesto}
-                            onChange={e => setConfig(p => ({ ...p, porcentajeImpuesto: Number(e.target.value) }))}
+                            value={globalTaxPercentage}
+                            onChange={e => setGlobalTaxPercentage(Number(e.target.value))}
                             required
                         />
                         <p className="text-xs text-gray-500 mt-1">

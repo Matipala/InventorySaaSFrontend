@@ -7,7 +7,7 @@ export function useStock() {
 
     return useQuery({
         queryKey: ["stock", empresaId],
-        queryFn: () => apiInventory.get(`/api/stock`).then((r) => r.data),
+        queryFn: () => apiInventory.get(`/api/inventory/companies/${empresaId}/stock`).then((r) => r.data),
         enabled: !!empresaId,
     });
 }
@@ -19,11 +19,15 @@ export function useRegistrarStockInicial() {
     return useMutation({
         mutationFn: (data) => {
             const payload = {
-                idProducto: data.idProducto,
-                idAlmacen: data.idAlmacen,
-                cantidad: Number(data.cantidad)
+                warehouseCen: data.idAlmacen,
+                source: "MANUAL",
+                referenceCen: "",
+                items: [{
+                    productCen: data.idProducto,
+                    quantity: Number(data.cantidad)
+                }]
             };
-            return apiInventory.post(`/api/stock/inicial`, payload).then((r) => r.data);
+            return apiInventory.post(`/api/inventory/companies/${empresaId}/stock/increase`, payload).then((r) => r.data);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["stock", empresaId] });
@@ -39,12 +43,15 @@ export function useAjusteStock() {
     return useMutation({
         mutationFn: (data) => {
             const payload = {
-                idProducto: data.idProducto,
-                idAlmacen: data.idAlmacen,
-                nuevaCantidad: Number(data.nuevaCantidad),
-                motivo: data.motivo || "Manual Adjustment"
+                warehouseCen: data.idAlmacen,
+                reason: data.motivo || "Ajuste manual",
+                lines: [{
+                    productCen: data.idProducto,
+                    quantity: Number(data.nuevaCantidad),
+                    adjustmentType: "SET"
+                }]
             };
-            return apiInventory.post(`/api/stock/ajuste`, payload).then((r) => r.data);
+            return apiInventory.post(`/api/inventory/companies/${empresaId}/stock/adjustments`, payload).then((r) => r.data);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["stock", empresaId] });
