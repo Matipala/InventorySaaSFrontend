@@ -54,12 +54,12 @@ export default function ProductosPage() {
     setError("");
 
     const payload = {
-      nombre: form.nombre,
+      name: form.nombre,
       sku: form.sku,
-      idCategoria: form.idCategoria,
-      idUnidad: form.idUnidad || null,
-      precioVenta: Number(form.precioVenta),
-      estacion: form.estacion || null,
+      categoryCen: form.idCategoria,
+      unitCen: form.idUnidad || null,
+      salePrice: Number(form.precioVenta),
+      stationCode: form.estacion || null,
       activo: form.activo,
       agotado86: form.agotado86,
     };
@@ -69,7 +69,7 @@ export default function ProductosPage() {
       return;
     }
 
-    if (!payload.idUnidad) {
+    if (!payload.unitCen) {
       setError("La unidad es obligatoria");
       return;
     }

@@ -5,17 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   PackageX,
-  Package,
   ShoppingCart,
   ChefHat,
-  Users,
   Receipt,
-  Warehouse,
   ChevronRight,
   TrendingUp,
-  Clock,
-  ArrowUpRight,
-  ArrowDownRight,
 } from "lucide-react";
 import apiInventory from "@/lib/apiInventory";
 import apiVentas from "@/lib/apiVentas";
@@ -63,20 +57,20 @@ export default function DashboardPage() {
   const stats = [
     {
       title: "Ventas del Día",
-      value: formatCurrency(resumenDiario?.totalSales || resumenDiario?.totalVentas || 0),
+      value: formatCurrency(resumenDiario?.totalSales || 0),
       icon: TrendingUp,
       color: "text-emerald-600",
       bg: "bg-emerald-50",
-      trend: "+12.5%",
+      trend: `${resumenDiario?.ticketsCount || 0} tickets`,
       trendColor: "text-emerald-600",
     },
     {
-      title: "Tickets Activos",
-      value: resumenDiario?.ticketsCount || resumenDiario?.cantidadTickets || 0,
+      title: "Ticket Promedio",
+      value: formatCurrency(resumenDiario?.averageTicket || 0),
       icon: Receipt,
       color: "text-blue-600",
       bg: "bg-blue-50",
-      trend: "En curso",
+      trend: "Hoy",
       trendColor: "text-blue-600",
     },
     {
@@ -94,7 +88,7 @@ export default function DashboardPage() {
       icon: ChefHat,
       color: "text-amber-600",
       bg: "bg-amber-50",
-      trend: "Media",
+      trend: "KDS",
       trendColor: "text-amber-600",
     },
   ];

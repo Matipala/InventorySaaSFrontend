@@ -32,6 +32,7 @@ const salesItems = [
     { href: "/ventas", label: "Ventas", icon: FileText },
     { href: "/pdv", label: "PDV", icon: ShoppingCart },
     { href: "/kds", label: "KDS", icon: Monitor },
+
     { href: "/configuracion", label: "Configuración", icon: Settings },
 ];
 

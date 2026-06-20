@@ -18,3 +18,18 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   transition: background 0.3s, color 0.3s;
 }
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideInRight 0.3s ease-out;
+}
